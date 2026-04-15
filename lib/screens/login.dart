@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'sign_in.dart';
+import 'sign_up.dart';
 import 'person.dart';
 
 
-class SignUp extends StatefulWidget {
-  const SignUp({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<SignUp> createState() => _SignUpState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _SignUpState extends State<SignUp> {
+class _LoginPageState extends State<LoginPage> {
   final email = TextEditingController();
   final password = TextEditingController();
   bool isHidden = true;
@@ -267,7 +267,7 @@ class _SignUpState extends State<SignUp> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const SignInPage(),
+                                  builder: (context) => const SignUpPage(),
                                 ),
                               );
                             },
