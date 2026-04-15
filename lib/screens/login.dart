@@ -203,7 +203,7 @@ class _SignUpState extends State<SignUp> {
 
                             child: const Center(
                               child: Text(
-                                "S'inscrire",
+                                "Se connecter",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
