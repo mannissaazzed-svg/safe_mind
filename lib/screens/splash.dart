@@ -7,7 +7,7 @@ import 'package:safemind/screens/medicaments.dart';
 import 'package:safemind/screens/nutrition.dart';
 import 'package:safemind/screens/person.dart';
 import 'package:safemind/screens/profile.dart';
-import 'package:safemind/screens/sign_up.dart';
+import 'package:safemind/screens/sign_in.dart';
 
 class Splash extends StatefulWidget {
   const Splash({super.key});
@@ -27,7 +27,7 @@ class _SplashState extends State<Splash> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const SignInPage(),
+          builder: (context) => const SignUp(),
         ),
       );
     });

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:safemind/screens/login.dart';
 import 'package:safemind/screens/person.dart';
-import 'package:safemind/screens/sign_up.dart';
+import 'package:safemind/screens/sign_in.dart';
 import 'package:safemind/screens/splash.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
