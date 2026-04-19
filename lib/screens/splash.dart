@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:safemind/screens/activites.dart';
-import 'package:safemind/screens/formulaire.dart';
-import 'package:safemind/screens/home.dart';
+import 'package:safemind/screens/patient/exercices/activites.dart';
+import 'package:safemind/screens/soignant/caregiver.dart';
+import 'package:safemind/screens/soignant/formulaire.dart';
+import 'package:safemind/screens/patient/home.dart';
 import 'package:safemind/screens/login.dart';
-import 'package:safemind/screens/medicaments.dart';
-import 'package:safemind/screens/nutrition.dart';
+import 'package:safemind/screens/patient/medicaments.dart';
+import 'package:safemind/screens/patient/nutrition.dart';
+import 'package:safemind/screens/patient/patient.dart';
 import 'package:safemind/screens/person.dart';
 import 'package:safemind/screens/profile.dart';
 import 'package:safemind/screens/sign_up.dart';
+import 'package:safemind/screens/soignant/tasks.dart';
 
 class Splash extends StatefulWidget {
   const Splash({super.key});
@@ -23,7 +26,7 @@ class _SplashState extends State<Splash> {
   void initState() {
     super.initState();
 
-    Future.delayed(const Duration(seconds: 10), () {
+    Future.delayed(const Duration(seconds: 5), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
