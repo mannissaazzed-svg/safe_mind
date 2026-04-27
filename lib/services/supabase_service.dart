@@ -7,7 +7,7 @@ class SupabaseService {
 
   static String get patientId => client.auth.currentUser!.id;
 
-  // ================= LOCATION =================
+  
 
   static Future<void> updateLocation({
     required String userId,
@@ -30,7 +30,7 @@ class SupabaseService {
             data.where((e) => e['user_id'] == userId).toList());
   }
 
-  // ================= STREAM TASKS =================
+ 
   static Stream<List<TaskModel>> streamTasksByDate(
     String patientId,
     DateTime date,
@@ -51,7 +51,7 @@ class SupabaseService {
     });
   }
 
-  // ================= INSERT TASKS =================
+  
   static Future<void> sendTasks(
     String patientId,
     DateTime date,
@@ -67,11 +67,11 @@ class SupabaseService {
         "title": t["title"],
         "type": t["type"],
 
-        // ✅ ربط اللون والصورة حسب النوع
+        
         "color": style["color"],
         "image": style["image"],
 
-        // ✅ مهم جدا: الوقت داخل النص
+        
         "sub_tasks": [
           {
             "title": "${t["time"]} ${t["detail"]}"
@@ -83,7 +83,7 @@ class SupabaseService {
     }
   }
 
-  // ================= UPDATE TASK =================
+ 
   static Future<void> updateTask({
     required String taskId,
     required String title,
@@ -104,12 +104,12 @@ class SupabaseService {
     }).eq('id', taskId);
   }
 
-  // ================= DELETE TASK =================
+  
   static Future<void> deleteTask(String taskId) async {
     await client.from('tasks').delete().eq('id', taskId);
   }
 
-  // ================= TASK STYLE =================
+  
   static Map<String, String> getTaskStyle(String type) {
     switch (type) {
       case "food":

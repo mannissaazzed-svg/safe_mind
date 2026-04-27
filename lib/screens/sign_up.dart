@@ -12,11 +12,7 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   bool isHidden = true;
-
-  // get auth service
   final authService = AuthService();
-
-  // text controllers
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordContruoller = TextEditingController();
@@ -59,7 +55,7 @@ class _SignUpPageState extends State<SignUpPage> {
               children: [
                 const SizedBox(height: 40),
 
-                /// Title
+                
                 const Text(
                   "Créez votre compte",
                   style: TextStyle(
@@ -71,7 +67,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
                 const SizedBox(height: 30),
 
-                /// Form Container
+              
                 Container(
                   padding: const EdgeInsets.all(25),
                   decoration: const BoxDecoration(
@@ -87,7 +83,6 @@ class _SignUpPageState extends State<SignUpPage> {
                     children: [
                       const SizedBox(height: 20),
 
-                      /// Email Field
                       buildInputContainer(
                         child: TextField(
                           controller: _emailController,
@@ -102,7 +97,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
                       const SizedBox(height: 20),
 
-                      /// Password Field
+                      
                       buildInputContainer(
                         child: TextField(
                           controller: _passwordController,
@@ -122,7 +117,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
                       const SizedBox(height: 20),
 
-                      /// Confirm Password Field
+                      
                       buildInputContainer(
                         child: TextField(
                           controller: _confirmPasswordContruoller,
@@ -143,7 +138,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     
                       const SizedBox(height: 45),
 
-                      /// Sign Up Button
+                     
                       SizedBox(
                         width: 220,
                         height: 55,

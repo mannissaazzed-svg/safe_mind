@@ -209,7 +209,7 @@ class _MedicineFormState extends State<MedicineForm> {
                     const SizedBox(height: 20),
                     Row(
                       children: [
-                        // زر الحذف
+                       
                         Expanded(
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.red[50], elevation: 0),
@@ -219,7 +219,7 @@ class _MedicineFormState extends State<MedicineForm> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        // زر الحفظ التأكيدي
+                        
                         Expanded(
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff00A3FF), elevation: 0),
@@ -323,7 +323,7 @@ class _MedicineFormState extends State<MedicineForm> {
           icon: const Icon(Icons.add, color: Colors.blue),
           onPressed: () {
             setState(() {
-              if (frequence < 3) frequence++; // ⭐ الحد الأقصى = 3
+              if (frequence < 3) frequence++; 
             });
           },
         ),

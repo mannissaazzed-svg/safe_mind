@@ -7,7 +7,7 @@ class TaskStatus {
 
   static void setStatus(String key, Color color) {
     statusMap[key] = color;
-    notifier.value++; // تحديث UI
+    notifier.value++; 
   }
 
   static Color getStatus(String key) {

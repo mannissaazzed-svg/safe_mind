@@ -247,7 +247,7 @@ class _PatientPageState extends State<PatientPage> {
 
   
   Widget buildTaskCard(TaskModel task) {
-    final color = task.getBaseColor(); // ✅ FIX HERE
+    final color = task.getBaseColor(); 
 
     return Container(
       margin: const EdgeInsets.only(bottom: 15),

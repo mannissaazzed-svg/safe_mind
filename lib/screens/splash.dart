@@ -59,14 +59,13 @@ class _SplashState extends State<Splash> {
             children: [
 
               ClipRRect(
-  borderRadius: BorderRadius.circular(30),
-  child: Image.asset(
-    "assets/neuro.jpg",
-    width: 120,
-    height: 120,
-    fit: BoxFit.cover,
-  ),
-),
+                borderRadius: BorderRadius.circular(30),
+                child: Image.asset("assets/neuro.jpg",
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
+                ),
+                ),
               const SizedBox(width: 10),
 
               const Text(

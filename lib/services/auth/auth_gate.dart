@@ -46,22 +46,21 @@ class AuthGate extends StatelessWidget {
         final role = data?['role'];
         final filled = data?['patient_filled'] ?? false;
 
-        // ❗ لم يحدد الدور
+       
         if (role == null) {
           return const Person();
         }
 
-        // ❗ مرافق ولم يملأ الفورم
+       
         if (role == "caregiver" && filled == false) {
           return const PatientForm();
         }
 
-        // ✔ مريض
+       
         if (role == "patient") {
           return const Home();
         }
-
-        // ✔ مرافق بعد الملء
+  
         return Caregiver(diseaseType: "Parkinson");
       },
     );

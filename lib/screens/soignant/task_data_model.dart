@@ -17,7 +17,7 @@ class TaskData {
     return TaskData(
       title: json['title'],
       description: json['description'],
-      color: Colors.indigo, // يمكن تطويرها لاحقاً من DB
+      color: Colors.indigo,
       image: json['image'],
     );
   }

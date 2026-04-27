@@ -44,7 +44,7 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
 
           const SizedBox(height: 10),
 
-          /// 🔥 BUTTONS CENTERED
+         
           Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
