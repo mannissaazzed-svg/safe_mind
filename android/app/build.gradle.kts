@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.safemind"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
 
     ndkVersion = "27.0.12077973"
 
@@ -21,11 +21,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.safemind"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+    applicationId = "com.example.safemind"
+    minSdk = 24
+    targetSdk = 36
+    versionCode = 1
+    versionName = "1.0"
     }
 
     buildTypes {
@@ -36,7 +36,7 @@ android {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 flutter {

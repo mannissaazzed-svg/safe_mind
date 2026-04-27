@@ -1,181 +1,158 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:async';
+
+import 'package:safemind/services/supabase_service.dart';
+import 'package:safemind/screens/task_model.dart';
 import 'package:safemind/screens/task_status.dart';
 
 class PatientPage extends StatefulWidget {
   const PatientPage({super.key});
+
   @override
   State<PatientPage> createState() => _PatientPageState();
 }
 
 class _PatientPageState extends State<PatientPage> {
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   Timer? timer;
-  Map<String, int> attempts = {}; 
-  Set<String> firedTasks = {};
+
   int selectedIndex = 0;
 
-  List<DateTime> days = List.generate(14, (i) => DateTime.now().add(Duration(days: i)));
+  List<TaskModel> currentTasks = [];
+  Set<String> firedTasks = {};
+  Map<String, int> attempts = {};
 
-  List<List<TaskData>> weekTasks = [
-    [
-      TaskData("Prendre médicaments", Colors.indigo,
-        ["19:45 Veuillez prendre votre dose de Donepezil", "00:26 Il est temps de prendre votre Vitamine"], "assets/medicine.png"),
-      TaskData("Repas équilibré", Colors.orange,
-        ["08:30 C'est l'heure de prendre votre Petit déjeuner", "13:00 Veuillez prendre votre Déjeuner"], "assets/food.png"),
-      TaskData("Activité physique", Colors.green,
-        ["10:00 Il est l'heure de faire votre Marche", "10:30 Veuillez commencer vos Exercices"], "assets/sport.png"),
-      TaskData("Activité cognitive", Colors.lime,
-        ["16:00 Il est temps de jouer au Jeu de mémoire", "16:30 C'est le moment de votre Lecture"], "assets/brain.png"),
-      TaskData("Médicaments soir", Colors.purple,
-        ["20:00 Prenez vos médicaments du soir", "23:54 Veuillez vérifier vos prises"], "assets/medicine.png"),
-    ],
-    [
-      TaskData("Prendre médicaments", Colors.indigo,
-        ["08:00 Veuillez prendre la Rivastigmine", "09:00 C'est l'heure de la Vitamine B12"], "assets/medicine.png"),
-      TaskData("Repas équilibré", Colors.orange,
-        ["08:30 Mangez vos Fruits", "13:00 C'est l'heure de manger le Couscous"], "assets/food.png"),
-      TaskData("Activité physique", Colors.green,
-        ["10:00 Allez faire votre Marche", "10:30 Faites vos exercices pour les bras"], "assets/sport.png"),
-      TaskData("Activité cognitive", Colors.lime,
-        ["16:00 Commencez votre Puzzle", "16:30 Il est temps de lire un peu"], "assets/brain.png"),
-      TaskData("Médicaments soir", Colors.purple,
-        ["20:00 Prenez votre Traitement", "20:15 N'oubliez pas de boire de l'Eau"], "assets/medicine.png"),
-    ],
-    [
-      TaskData("Prendre médicaments", Colors.indigo,
-        ["08:00 Prenez vos Médicaments maintenant"], "assets/medicine.png"),
-      TaskData("Repas équilibré", Colors.orange,
-        ["13:00 C'est l'heure de votre Déjeuner"], "assets/food.png"),
-      TaskData("Activité physique", Colors.green,
-        ["10:00 Il est temps de faire votre Marche"], "assets/sport.png"),
-      TaskData("Activité cognitive", Colors.lime,
-        ["16:00 Commencez votre séance de Lecture"], "assets/brain.png"),
-    ],
-    [
-      TaskData("Prendre médicaments", Colors.indigo,
-        ["08:00 Veuillez prendre votre Traitement"], "assets/medicine.png"),
-      TaskData("Repas équilibré", Colors.orange,
-        ["13:00 Mangez votre plat de Riz"], "assets/food.png"),
-    ],
-    [
-      TaskData("Prendre médicaments", Colors.indigo,
-        ["08:00 Prenez vos Médicaments habituels"], "assets/medicine.png"),
-      TaskData("Activité physique", Colors.green,
-        ["10:00 C'est le moment de votre Marche"], "assets/sport.png"),
-    ],
-    [
-      TaskData("Activité cognitive", Colors.lime,
-        ["16:00 Allez faire votre Jeu de mémoire"], "assets/brain.png"),
-    ],
-    [
-      TaskData("Rendez-vous médecin", Colors.red,
-        ["11:00 Préparez-vous pour votre RDV chez le Médecin"], "assets/doctor.png"),
-    ],
-  ];
+  List<DateTime> days =
+      List.generate(14, (i) => DateTime.now().add(Duration(days: i)));
 
   @override
   void initState() {
     super.initState();
-    initNotification();
-    timer = Timer.periodic(const Duration(seconds: 5), (_) => checkTasks());
+
+    timer = Timer.periodic(const Duration(seconds: 5), (_) {
+      checkTasks();
+    });
   }
 
-  Future initNotification() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    await flutterLocalNotificationsPlugin.initialize(const InitializationSettings(android: android));
+ 
+  void updateTasks(List<TaskModel> tasks) {
+    currentTasks = tasks;
   }
 
+  
   void checkTasks() {
     final now = DateTime.now();
-    final currentTime = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-    final tasks = weekTasks[selectedIndex % weekTasks.length];
 
-    for (var task in tasks) {
-      for (var item in task.list) {
-        final time = item.split(" ")[0];
-        final key = "${task.title}-$item";
+    final currentTime =
+        "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+
+    for (var task in currentTasks) {
+      for (var sub in task.subTasks) {
+        final text = (sub is Map && sub['title'] != null)
+            ? sub['title']
+            : '';
+
+        final time = text.split(" ")[0];
+        final key = "${task.id}-$text";
 
         if (time == currentTime && !firedTasks.contains(key)) {
           firedTasks.add(key);
-          triggerTaskFlow(task.title, item, task.image);
+          showTaskDialog(task, text);
         }
       }
     }
   }
 
-  void triggerTaskFlow(String title, String body, String image) {
-    showNotification(title, body);
-    showDialogTask(title, body, image);
-  }
-
-  Future showNotification(String title, String body) async {
-    
-    const android = AndroidNotificationDetails("tasks", "Mes Tâches", importance: Importance.max, priority: Priority.high);
-    await flutterLocalNotificationsPlugin.show(0, title, body, const NotificationDetails(android: android));
-  }
-
-  void showDialogTask(String title, String body, String image) {
-    final key = "$title-$body";
+  
+  void showTaskDialog(TaskModel task, String body) {
+    final key = "${task.id}-$body";
     int attempt = attempts[key] ?? 1;
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(image, width: 70),
+              Image.asset(task.image, width: 70),
               const SizedBox(height: 15),
-              Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              
+
               Text(
-                "Vous devez effectuer cette tâche (Tentative $attempt):\n$body", 
-                textAlign: TextAlign.center
+                task.title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+
+              const SizedBox(height: 10),
+
+              Text(
+                "Tentative $attempt\n$body",
+                textAlign: TextAlign.center,
+              ),
+
               const SizedBox(height: 20),
+
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6F6BDE), 
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                        backgroundColor: const Color(0xFF6F6BDE),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       onPressed: () {
-                        TaskStatus.setStatus(key, attempt == 1 ? Colors.green : Colors.orange);
+                        TaskStatus.setStatus(key, Colors.green);
                         Navigator.pop(context);
                         setState(() {});
                       },
-                     
-                      child: const Text("Confirmer", style: TextStyle(color: Colors.white)),
+                      child: const Text(
+                        "Confirmer",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
+
                   const SizedBox(width: 10),
+
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red, 
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       onPressed: () {
                         Navigator.pop(context);
-                        if (attempt < 3) {
+
+                        if (attempt < 2) {
                           attempts[key] = attempt + 1;
-                          Timer(const Duration(minutes: 2), () => triggerTaskFlow(title, body, image));
+
+                          TaskStatus.setStatus(key, Colors.orange);
+
+                          Timer(const Duration(minutes: 5), () {
+                            firedTasks.remove(key);
+                            showTaskDialog(task, body);
+                          });
                         } else {
                           TaskStatus.setStatus(key, Colors.red);
-                          setState(() {});
                         }
+
+                        setState(() {});
                       },
-                      
-                      child: const Text("Annuler", style: TextStyle(color: Colors.white)),
+                      child: const Text(
+                        "Annuler",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
                 ],
@@ -187,27 +164,43 @@ class _PatientPageState extends State<PatientPage> {
     );
   }
 
+  
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white, elevation: 0,
-        title: const Text("Mes tâches", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+    return StreamBuilder<List<TaskModel>>(
+      stream: SupabaseService.streamTasksByDate(
+        SupabaseService.patientId,
+        days[selectedIndex],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            buildDaysList(),
-            const SizedBox(height: 20),
-            ...weekTasks[selectedIndex % weekTasks.length].map((task) => buildTaskCard(task)).toList(),
-          ],
-        ),
-      ),
+      builder: (context, snapshot) {
+        final tasks = snapshot.data ?? [];
+
+        updateTasks(tasks);
+
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            title: const Text("Mes tâches"),
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+          ),
+
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                buildDaysList(),
+                const SizedBox(height: 20),
+                ...tasks.map((t) => buildTaskCard(t)).toList(),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
+  
   Widget buildDaysList() {
     return SizedBox(
       height: 60,
@@ -216,7 +209,8 @@ class _PatientPageState extends State<PatientPage> {
         itemCount: days.length,
         itemBuilder: (context, index) {
           final d = days[index];
-          bool isSelected = selectedIndex == index;
+          final isSelected = selectedIndex == index;
+
           return GestureDetector(
             onTap: () => setState(() => selectedIndex = index),
             child: Container(
@@ -229,10 +223,19 @@ class _PatientPageState extends State<PatientPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"][d.weekday - 1],
-                      style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
-                  Text(d.day.toString(),
-                      style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+                  Text(
+                    ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
+                        [d.weekday - 1],
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  Text(
+                    d.day.toString(),
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -242,35 +245,62 @@ class _PatientPageState extends State<PatientPage> {
     );
   }
 
-  Widget buildTaskCard(TaskData task) {
+  
+  Widget buildTaskCard(TaskModel task) {
+    final color = task.getBaseColor(); // ✅ FIX HERE
+
     return Container(
-      padding: const EdgeInsets.all(15),
       margin: const EdgeInsets.only(bottom: 15),
-      decoration: BoxDecoration(color: task.color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Image.asset(task.image, width: 40),
-              const SizedBox(width: 15),
-              Text(task.title, style: TextStyle(fontWeight: FontWeight.bold, color: task.color, fontSize: 16)),
+              const SizedBox(width: 10),
+              Text(
+                task.title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
             ],
           ),
+
           const SizedBox(height: 10),
-          ...task.list.map((item) => Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                child: Row(children: [Icon(Icons.notifications, color: task.color, size: 18), const SizedBox(width: 10), Text(item)]),
-              )),
+
+          ...task.subTasks.map((e) {
+            final text = (e is Map && e['title'] != null)
+                ? e['title']
+                : '';
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.notifications, color: color, size: 18),
+                  const SizedBox(width: 10),
+                  Text(text),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
   }
 }
-
-
 
 
 

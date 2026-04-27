@@ -1,6 +1,34 @@
 import 'package:flutter/material.dart';
 
 class TaskStatus {
+  static final Map<String, Color> statusMap = {};
+
+  static final ValueNotifier<int> notifier = ValueNotifier(0);
+
+  static void setStatus(String key, Color color) {
+    statusMap[key] = color;
+    notifier.value++; // تحديث UI
+  }
+
+  static Color getStatus(String key) {
+    return statusMap[key] ?? Colors.grey;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/*import 'package:flutter/material.dart';
+
+class TaskStatus {
   static Map<String, Color> status = {};
   static final ValueNotifier<int> notifier = ValueNotifier(0);
 
@@ -21,6 +49,6 @@ class TaskData {
   final String image;
   TaskData(this.title, this.color, this.list, this.image);
 }
-
+*/
 
 

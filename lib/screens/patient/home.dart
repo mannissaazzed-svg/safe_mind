@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:safemind/auth/auth_service.dart';
+import 'package:safemind/services/auth/auth_service.dart';
 import 'package:safemind/screens/notifications.dart';
 import 'package:safemind/screens/patient/exercices/activites.dart';
+import 'package:safemind/screens/patient/patient_location.dart';
 import 'package:safemind/screens/soignant/call.dart';
-import 'package:safemind/screens/map.dart';
+import 'package:safemind/screens/soignant/map.dart';
 import 'package:safemind/screens/patient/medicaments.dart'; 
 import 'package:safemind/screens/patient/nutrition.dart';
 import 'package:safemind/screens/patient/patient.dart';
@@ -40,7 +41,6 @@ class _HomeState extends State<Home> {
                   _buildTopHeader(context),
                   _buildSectionTitle("Catégories"),
                   const SizedBox(height: 10),
-
                   
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -53,11 +53,9 @@ class _HomeState extends State<Home> {
 
                   const SizedBox(height: 20),
 
-                  
                   _buildSectionTitle("Services"),
                   const SizedBox(height: 10),
 
-                  
                   Padding(
                     padding: const EdgeInsets.all(15),
                     child: Container(
@@ -71,12 +69,9 @@ class _HomeState extends State<Home> {
                         crossAxisSpacing: 15,
                         childAspectRatio: 0.85,
                         children: [
-                         
                           GestureDetector(
                             onTap: () {
-                              
                               String diseaseName = (selectedCategory == 0) ? "Alzheimer" : "Parkinson";
-                              
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -88,7 +83,7 @@ class _HomeState extends State<Home> {
                           ),
 
                           GestureDetector(
-                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const NutritionPage())),
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => HealthAnalysis())),
                             child: serviceItem("assets/nutrition.png", "Nutrition"),
                           ),
 
@@ -103,7 +98,6 @@ class _HomeState extends State<Home> {
                     ),
                   ),
 
-                 
                   _buildEmergencyButton(),
                   const SizedBox(height: 20),
                 ],
@@ -115,8 +109,6 @@ class _HomeState extends State<Home> {
       bottomNavigationBar: _buildBottomNav(),
     );
   }
-
-  
 
   Widget _buildSectionTitle(String title) {
     return Padding(
@@ -188,48 +180,40 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildTopHeader(BuildContext context) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 15),
-    child: Stack(
-      children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            
-            margin: const EdgeInsets.only(left: 20, right: 12), 
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.asset(
-                "assets/tech.png", 
-                height: 220, 
-                width: double.infinity, 
-                
-                fit: BoxFit.fill, 
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 15),
+      child: Stack(
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: Container(
+              margin: const EdgeInsets.only(left: 20, right: 12), 
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  "assets/tech.png", 
+                  height: 220, 
+                  width: double.infinity, 
+                  fit: BoxFit.fill, 
+                ),
               ),
             ),
           ),
-        ),
-        // زر القائمة
-        Positioned(
-          top: 10,
-          left: 10, 
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.black26, 
-              shape: BoxShape.circle,
-            ),
+          
+          Positioned(
+            top: 5,
+            left: 15, 
             child: IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white, size: 30),
+              
+              icon: const Icon(Icons.sort_rounded, color: Colors.white, size: 35), 
               onPressed: () => Scaffold.of(context).openDrawer(),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
-  
-  
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmergencyButton() {
     return Container(
       height: 76, width: 194,
@@ -239,19 +223,19 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildBottomNav() {
-     return Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-        decoration: BoxDecoration(color: const Color.fromARGB(255, 39, 40, 40), borderRadius: BorderRadius.circular(40)),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            glowNavItem(Icons.home, 0),
-            glowNavItem(Icons.phone, 1),
-            glowNavItem(Icons.check_box, 2),
-          ],
-        ),
-      );
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(color: const Color.fromARGB(255, 39, 40, 40), borderRadius: BorderRadius.circular(40)),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          glowNavItem(Icons.home, 0),
+          glowNavItem(Icons.phone, 1),
+          glowNavItem(Icons.check_box, 2),
+        ],
+      ),
+    );
   }
 
   Widget glowNavItem(IconData icon, int index) {
@@ -269,34 +253,33 @@ class _HomeState extends State<Home> {
   Widget _buildDrawer() {
     return Drawer(
       child: Container(
-        width: double.infinity,
-        height: double.infinity,
         decoration: const BoxDecoration(
-         
-          image: DecorationImage(
-            image: AssetImage("assets/blue.png"),
-            fit: BoxFit.cover,
-            
-            //colorFilter: ColorFilter.mode(Colors.black45, BlendMode.darken),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF81C784), 
+              Color(0xFFA5D6A7), 
+            ],
           ),
         ),
         child: Column(
           children: [
             const SizedBox(height: 80),
-
-            _drawerItem(Icons.map, "Carte", () {
+            
+            _drawerItem(Icons.map_outlined, "Carte", () {
               Navigator.pop(context); 
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const MapPage()));
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SmartMapScreen()));
             }),
 
-            _drawerItem(Icons.notifications, "Notifications", () {
+            _drawerItem(Icons.notifications_none_rounded, "Notifications", () {
               Navigator.pop(context);
               Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsPage()));
             }),
 
             const Spacer(),
 
-            _drawerItem(Icons.logout, "Déconnexion", () {
+            _drawerItem(Icons.logout_rounded, "Déconnexion", () {
               logout();
             }, isLogout: true),
 
@@ -307,19 +290,19 @@ class _HomeState extends State<Home> {
     );
   }
 
-  
   Widget _drawerItem(IconData icon, String title, VoidCallback onTap, {bool isLogout = false}) {
     return ListTile(
       leading: Icon(
         icon, 
-        color: isLogout ? Colors.redAccent : Colors.white,
+        color: isLogout ? Colors.red[900] : Colors.white,
+        size: 28,
       ),
       title: Text(
         title,
         style: TextStyle(
-          color: isLogout ? Colors.redAccent : Colors.white,
+          color: isLogout ? Colors.red[900] : Colors.white,
           fontWeight: FontWeight.bold,
-          fontSize: 16,
+          fontSize: 17,
         ),
       ),
       onTap: onTap,

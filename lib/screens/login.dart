@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:safemind/screens/patient/home.dart';
+import 'package:safemind/screens/soignant/formulaire.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:safemind/auth/auth_service.dart';
+import 'package:safemind/services/auth/auth_service.dart';
 import 'sign_up.dart';
 import 'person.dart';
 
@@ -28,34 +30,40 @@ final _passwordController = TextEditingController();
 // login button pressed
 
 void login() async {
-  // prepare data
   final email = _emailController.text.trim();
   final password = _passwordController.text.trim();
-  // attempt login
+
   try {
     await authService.signInWithEmailPassword(email, password);
 
-    if (mounted) {
+    String? role = await authService.getRole();
+
+    if (!mounted) return;
+
+    if (role == null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const Person(),
-        ),
+        MaterialPageRoute(builder: (_) => const Person()),
+      );
+    } 
+    else if (role == "patient") {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const Home()),
+      );
+    } 
+    else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const PatientForm()),
       );
     }
-  }
-    // catch any erroes
-    
-   catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")));
-      
-    }
-  }
 
+  } catch (e) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text("$e")));
+  }
 }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -330,6 +338,12 @@ void login() async {
   }
 
 }
+
+
+
+
+
+
 
 
 

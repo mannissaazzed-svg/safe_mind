@@ -11,6 +11,8 @@ import 'package:safemind/screens/person.dart';
 import 'package:safemind/screens/profile.dart';
 import 'package:safemind/screens/sign_up.dart';
 import 'package:safemind/screens/soignant/tasks.dart';
+import 'package:safemind/screens/tracking.dart';
+import 'package:safemind/services/auth/auth_gate.dart';
 
 class Splash extends StatefulWidget {
   const Splash({super.key});
@@ -18,6 +20,7 @@ class Splash extends StatefulWidget {
   @override
   State<Splash> createState() => _SplashState();
 }
+
 
 
 class _SplashState extends State<Splash> {
@@ -30,7 +33,7 @@ class _SplashState extends State<Splash> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const LoginPage(),
+          builder: (context) => LoginPage(),
         ),
       );
     });

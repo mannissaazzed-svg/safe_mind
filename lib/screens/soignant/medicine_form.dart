@@ -298,17 +298,39 @@ class _MedicineFormState extends State<MedicineForm> {
   }
 
   Widget _buildCounter() {
-    return Container(
-      decoration: BoxDecoration(color: const Color(0xffF5F8FF), borderRadius: BorderRadius.circular(15)),
-      child: Row(
-        children: [
-          IconButton(icon: const Icon(Icons.remove, color: Colors.blue), onPressed: () => setState(() { if(frequence > 1) frequence--; })),
-          Text("$frequence", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          IconButton(icon: const Icon(Icons.add, color: Colors.blue), onPressed: () => setState(() => frequence++)),
-        ],
-      ),
-    );
-  }
+  return Container(
+    decoration: BoxDecoration(
+      color: const Color(0xffF5F8FF),
+      borderRadius: BorderRadius.circular(15),
+    ),
+    child: Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.remove, color: Colors.blue),
+          onPressed: () {
+            setState(() {
+              if (frequence > 1) frequence--;
+            });
+          },
+        ),
+
+        Text(
+          "$frequence",
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+
+        IconButton(
+          icon: const Icon(Icons.add, color: Colors.blue),
+          onPressed: () {
+            setState(() {
+              if (frequence < 3) frequence++; // ⭐ الحد الأقصى = 3
+            });
+          },
+        ),
+      ],
+    ),
+  );
+}
 }
 
 

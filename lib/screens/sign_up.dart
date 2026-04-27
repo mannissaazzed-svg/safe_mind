@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:safemind/auth/auth_service.dart';
+import 'package:safemind/services/auth/auth_service.dart';
 import 'package:safemind/screens/person.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -22,33 +22,24 @@ class _SignUpPageState extends State<SignUpPage> {
   final _confirmPasswordContruoller = TextEditingController();
 
   void signUp() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    final confirmPassword = _confirmPasswordContruoller.text.trim();
+  final email = _emailController.text.trim();
+  final password = _passwordController.text.trim();
 
-    if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Passwords don't match")),
-      );
-      return;
-    }
+  try {
+    await authService.signUpWithEmailPassword(email, password);
 
-    try {
-      await authService.signUpWithEmailPassword(email, password);
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Person()),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
-        );
-      }
-    }
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const Person()),
+    );
+
+  } catch (e) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text("$e")));
   }
+}
 
   @override
   Widget build(BuildContext context) {
