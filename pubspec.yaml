@@ -33,9 +33,51 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
+  
   # For OpenStreetMap
+
+
+  file_picker: ^10.1.9
+  printing: ^5.11.0
+  pdf: ^3.10.7
+  share_plus: ^7.2.1
+  qr_flutter: ^4.1.0
+  intl: ^0.18.1
+  open_filex: ^4.5.0
+  dio: ^5.4.0
+  mobile_scanner: ^5.2.3
+  signature: ^5.4.0
+  video_player: ^2.8.3
+  chewie: ^1.7.4
+
+  # UI
+  cupertino_icons: ^1.0.8
+  font_awesome_flutter: ^10.7.0
+
+  # Network
   http: ^1.6.0
+
+  # Backend (Supabase)
+  supabase_flutter: ^2.12.2
+
+  # Firebase
+  firebase_core: ^3.0.0
+  firebase_messaging: ^15.0.0
+
+  # Calls (Agora)
+  agora_rtc_engine: ^6.3.2
+  permission_handler: ^11.0.0
+
+  # Media
+  image_picker: ^1.2.1
+  path_provider: ^2.1.0
+  uuid: ^4.5.3
+
+  # Voice/Audio
+  record: ^5.2.1
+  audioplayers: ^6.0.0 
+
+  # Maps
   flutter_map: ^8.3.0
   flutter_map_location_marker: ^10.1.0
   location: ^7.0.1
@@ -43,24 +85,41 @@ dependencies:
   flutter_polyline_points: ^2.1.0 
   geocoding: ^3.0.0
   
-  
-  
+  # Speech
   speech_to_text: ^7.0.0
   flutter_tts: ^4.0.2
-  permission_handler: ^11.3.1
-  
 
-
-
-  supabase_flutter: ^2.12.2
-  percent_indicator: ^4.2.5
+  # Notifications
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
-  
-  image_picker: ^1.2.1
-  uuid: ^4.5.3
+
+  # UI helpers
+  percent_indicator: ^4.2.5
+
+  # External apps
   url_launcher: ^6.1.10
-  font_awesome_flutter: ^10.7.0
+  fl_chart: ^0.66.0
+
+
+
+
+
+
+  #permission_handler: ^11.3.1
+
+  flutter_animate: ^4.5.0
+  google_fonts: ^6.1.0
+
+
+
+  
+  
+  
+  
+  
+  
+  
+  
  
 
  

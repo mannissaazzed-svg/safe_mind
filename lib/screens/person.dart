@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:safemind/screens/patient/patient_profile.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:safemind/screens/soignant/formulaire.dart';
-import 'package:safemind/screens/patient/home.dart';
+import 'package:safemind/screens/soignant/caregiver_profile.dart';
+import 'package:safemind/screens/medecin/Doctor_Registration.dart';
 
 class Person extends StatefulWidget {
   const Person({super.key});
@@ -11,35 +12,56 @@ class Person extends StatefulWidget {
 }
 
 class _PersonState extends State<Person> {
+  bool _isLoading = false;
+
   Future<void> setRole(BuildContext context, String role) async {
-    final supabase = Supabase.instance.client;
-    final user = supabase.auth.currentUser;
+    setState(() => _isLoading = true);
 
-    if (user == null) return;
+    try {
+      final supabase = Supabase.instance.client;
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
 
-    await supabase
-        .from('users')
-        .update({'role': role})
-        .eq('id', user.id);
+      await supabase
+          .from('users')
+          .update({'role': role})
+          .eq('id', user.id);
 
-    if (!context.mounted) return;
+      if (!context.mounted) return;
 
-    if (role == "patient") {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) =>  Home()),
-      );
-    } else if (role == "caregiver") {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) =>  PatientForm()),
-      );
-    } else {
-      
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const PatientForm()),
-      );
+      if (role == "patient") {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const PatientProfileScreen(isFirstTime: true), // ✅
+          ),
+        );
+      } else if (role == "médecin") {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const MedecinRegistrationPage(),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const CaregiverProfileScreen(isFirstTime: true), // ✅
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('خطأ: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -55,10 +77,7 @@ class _PersonState extends State<Person> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xffB7BCC0),
-              Color(0xff559ACA),
-            ],
+            colors: [Color(0xffB7BCC0), Color(0xff559ACA)],
           ),
         ),
         child: SafeArea(
@@ -66,38 +85,26 @@ class _PersonState extends State<Person> {
           child: Column(
             children: [
               SizedBox(height: screenHeight * 0.05),
-
               const Text(
-                "Qui ètes vous ?",
+                "Qui êtes vous ?",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 32,
                   fontWeight: FontWeight.w900,
-                  height: 1.1,
                 ),
               ),
-
               const SizedBox(height: 10),
-
               const Text(
                 "Sélectionnez votre profil pour commencer",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
-
               const SizedBox(height: 30),
-
               Expanded(
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-
-                    
                     Positioned.fill(
                       top: 70,
                       child: Container(
@@ -110,50 +117,33 @@ class _PersonState extends State<Person> {
                             topLeft: Radius.circular(50),
                             topRight: Radius.circular(50),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 15,
-                              offset: Offset(0, -5),
-                            )
-                          ],
                         ),
                       ),
                     ),
-
-                   
                     Positioned(
                       top: -40,
                       right: 20,
                       child: SizedBox(
                         height: screenHeight * 0.20,
-                        child: Image.asset(
-                          "assets/int.png",
-                          fit: BoxFit.contain,
-                        ),
+                        child: Image.asset("assets/int.png", fit: BoxFit.contain),
                       ),
                     ),
-
-                    
                     Positioned(
                       top: 140,
                       left: 30,
                       right: 30,
                       bottom: 60,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          buildButton("MÉDECIN", () {
-                            setRole(context, "caregiver");
-                          }),
-                          buildButton("PATIENT", () {
-                            setRole(context, "patient");
-                          }),
-                          buildButton("AIDE SOIGNANT", () {
-                            setRole(context, "caregiver");
-                          }),
-                        ],
-                      ),
+                      child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(color: Colors.white))
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                buildButton("MÉDECIN", () => setRole(context, "médecin")),
+                                buildButton("PATIENT", () => setRole(context, "patient")),
+                                buildButton("AIDE SOIGNANT", () => setRole(context, "caregiver")),
+                              ],
+                            ),
                     ),
                   ],
                 ),
@@ -165,7 +155,6 @@ class _PersonState extends State<Person> {
     );
   }
 
-  
   Widget buildButton(String text, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
@@ -199,6 +188,3 @@ class _PersonState extends State<Person> {
     );
   }
 }
-
-
-

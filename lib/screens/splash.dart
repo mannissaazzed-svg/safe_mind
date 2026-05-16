@@ -1,17 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:safemind/screens/patient/exercices/activites.dart';
-import 'package:safemind/screens/soignant/caregiver.dart';
-import 'package:safemind/screens/soignant/formulaire.dart';
+import 'package:safemind/screens/medecin/dashboard.dart';
 import 'package:safemind/screens/patient/home.dart';
-import 'package:safemind/screens/login.dart';
-import 'package:safemind/screens/patient/medicaments.dart';
-import 'package:safemind/screens/patient/nutrition.dart';
-import 'package:safemind/screens/patient/patient.dart';
 import 'package:safemind/screens/person.dart';
-import 'package:safemind/screens/profile.dart';
-import 'package:safemind/screens/sign_up.dart';
-import 'package:safemind/screens/soignant/tasks.dart';
-import 'package:safemind/screens/tracking.dart';
+import 'package:safemind/screens/soignant/caregiver.dart';
 import 'package:safemind/services/auth/auth_gate.dart';
 
 class Splash extends StatefulWidget {
@@ -21,20 +12,16 @@ class Splash extends StatefulWidget {
   State<Splash> createState() => _SplashState();
 }
 
-
-
 class _SplashState extends State<Splash> {
 
   @override
   void initState() {
     super.initState();
-
-    Future.delayed(const Duration(seconds: 5), () {
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => LoginPage(),
-        ),
+        MaterialPageRoute(builder: (_) => const AuthGate()),
       );
     });
   }
@@ -45,10 +32,7 @@ class _SplashState extends State<Splash> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xff5c9bd5),
-              Colors.grey,
-            ],
+            colors: [Color(0xff5c9bd5), Colors.grey],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -57,17 +41,15 @@ class _SplashState extends State<Splash> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-
               ClipRRect(
                 borderRadius: BorderRadius.circular(30),
-                child: Image.asset("assets/neuro.jpg",
-                width: 120,
-                height: 120,
-                fit: BoxFit.cover,
+                child: Image.asset(
+                  "assets/neuro.jpg",
+                  width: 120, height: 120,
+                  fit: BoxFit.cover,
                 ),
-                ),
+              ),
               const SizedBox(width: 10),
-
               const Text(
                 "SAFEMIND",
                 style: TextStyle(
@@ -77,7 +59,6 @@ class _SplashState extends State<Splash> {
                   letterSpacing: 2,
                 ),
               ),
-
             ],
           ),
         ),

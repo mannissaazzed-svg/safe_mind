@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:safemind/services/supabase_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:safemind/screens/soignant/check.dart';
 
 class CaregiverAddTasks extends StatefulWidget {
@@ -10,180 +10,176 @@ class CaregiverAddTasks extends StatefulWidget {
 }
 
 class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
+  final supabase = Supabase.instance.client;
   DateTime selectedDate = DateTime.now();
-
-  
-  Map<String, List<Map<String, dynamic>>> tasksByDate = {};
+  List<Map<String, dynamic>> tasks = [];
+  bool _isLoading = false;
+  bool _isSending = false;
 
   String get dateKey => selectedDate.toIso8601String().split("T")[0];
 
-  List<Map<String, dynamic>> get tasks =>
-      tasksByDate[dateKey] ?? [];
+  final Map<String, Map<String, dynamic>> taskTypes = {
+    "medicine": {"color": "indigo",  "image": "assets/medicine.png"},
+    "food":     {"color": "orange",  "image": "assets/food.png"},
+    "sport":    {"color": "green",   "image": "assets/sport.png"},
+    "brain":    {"color": "lime",    "image": "assets/brain.png"},
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
 
   
+  Future<String?> _getPatientId() async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return null;
+    final data = await supabase
+        .from('users')
+        .select('linked_to')
+        .eq('id', userId)
+        .maybeSingle();
+    return data?['linked_to'] as String?;
+  }
+
+  
+  Future<void> _loadTasks() async {
+    setState(() => _isLoading = true);
+    try {
+      final patientId = await _getPatientId();
+      if (patientId == null) return;
+
+      final data = await supabase
+          .from('tasks')
+          .select()
+          .eq('patient_id', patientId)
+          .eq('task_date', dateKey)
+          .order('created_at');
+
+      setState(() {
+        tasks = [];
+        for (final row in data) {
+          final subTasks = (row['sub_tasks'] as List?) ?? [];
+          for (final sub in subTasks) {
+            tasks.add({
+              'id':     row['id'],
+              'title':  sub['title']?.split(' ').skip(1).join(' ') ?? '',
+              'detail': sub['title'] ?? '',
+              'time':   sub['title']?.split(' ').first ?? '',
+              'type':   row['title'],
+            });
+          }
+        }
+      });
+    } catch (e) {
+      _showSnack('Erreur chargement: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   void pickDate() async {
     final picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
-      firstDate: DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 30)),
       lastDate: DateTime(2100),
     );
-
     if (picked != null) {
       setState(() => selectedDate = picked);
+      _loadTasks();
     }
   }
 
-  
-  Map<String, Map<String, dynamic>> taskTypes = {
-    "medicine": {
-      "color": "indigo",
-      "image": "assets/medicine.png"
-    },
-    "food": {
-      "color": "orange",
-      "image": "assets/food.png"
-    },
-    "sport": {
-      "color": "green",
-      "image": "assets/sport.png"
-    },
-    "brain": {
-      "color": "lime",
-      "image": "assets/brain.png"
-    },
-  };
-
- 
   void addOrEditTask({Map<String, dynamic>? task, int? index}) {
-    TextEditingController title =
-        TextEditingController(text: task?["title"] ?? "");
-    TextEditingController detail =
-        TextEditingController(text: task?["detail"] ?? "");
-
+    final titleCtrl  = TextEditingController(text: task?['title']  ?? '');
+    final detailCtrl = TextEditingController(text: task?['detail'] ?? '');
     TimeOfDay selectedTime = task != null
         ? TimeOfDay(
-            hour: int.parse(task["time"].split(":")[0]),
-            minute: int.parse(task["time"].split(":")[1]),
+            hour:   int.parse(task['time'].split(':')[0]),
+            minute: int.parse(task['time'].split(':')[1]),
           )
         : TimeOfDay.now();
-
-    String selectedType = task?["type"] ?? "medicine";
+    String selectedType = task?['type'] ?? 'medicine';
 
     showDialog(
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setStateDialog) => Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(task == null ? "Nouvelle tâche" : "Modifier tâche"),
-
+                Text(
+                  task == null ? "Nouvelle tâche" : "Modifier tâche",
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
                 const SizedBox(height: 10),
-
                 TextField(
-                  controller: title,
+                  controller: titleCtrl,
                   decoration: const InputDecoration(
-                    hintText: "Titre",
-                    border: OutlineInputBorder(),
-                  ),
+                    hintText: "Titre", border: OutlineInputBorder()),
                 ),
-
                 const SizedBox(height: 10),
-
                 TextField(
-                  controller: detail,
+                  controller: detailCtrl,
                   decoration: const InputDecoration(
-                    hintText: "Détails",
-                    border: OutlineInputBorder(),
+                    hintText: "Détails", border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 10),
+                Row(children: [
+                  const Icon(Icons.access_time),
+                  TextButton(
+                    onPressed: () async {
+                      final t = await showTimePicker(
+                          context: context, initialTime: selectedTime);
+                      if (t != null) setStateDialog(() => selectedTime = t);
+                    },
+                    child: Text(selectedTime.format(context)),
                   ),
-                ),
-
+                ]),
                 const SizedBox(height: 10),
-
-               
-                Row(
-                  children: [
-                    const Icon(Icons.access_time),
-                    TextButton(
-                      onPressed: () async {
-                        final t = await showTimePicker(
-                          context: context,
-                          initialTime: selectedTime,
-                        );
-                        if (t != null) {
-                          setStateDialog(() => selectedTime = t);
-                        }
-                      },
-                      child: Text(selectedTime.format(context)),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 10),
-
-               
                 DropdownButton<String>(
                   value: selectedType,
-                  items: taskTypes.keys.map((e) {
-                    return DropdownMenuItem(
-                      value: e,
-                      child: Text(e),
-                    );
-                  }).toList(),
-                  onChanged: (v) {
-                    setStateDialog(() => selectedType = v!);
-                  },
+                  isExpanded: true,
+                  items: taskTypes.keys.map((e) =>
+                    DropdownMenuItem(value: e, child: Text(e))).toList(),
+                  onChanged: (v) => setStateDialog(() => selectedType = v!),
                 ),
-
                 const SizedBox(height: 15),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          final newTask = {
-                            "title": title.text,
-                            "detail": detail.text,
-                            "time":
-                                "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}",
-                            "type": selectedType,
-                          };
-
-                          setState(() {
-                            tasksByDate.putIfAbsent(dateKey, () => []);
-
-                            if (task == null) {
-                             
-                              tasksByDate[dateKey]!.add(newTask);
-                            } else {
-                             
-                              tasksByDate[dateKey]![index!] = newTask;
-                            }
-                          });
-
-                          Navigator.pop(context);
-                        },
-                        child: Text(task == null ? "Ajouter" : "Modifier"),
-                      ),
+                Row(children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final newTask = {
+                          'title':  titleCtrl.text,
+                          'detail': detailCtrl.text,
+                          'time':   '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+                          'type':   selectedType,
+                        };
+                        setState(() {
+                          if (index == null) {
+                            tasks.add(newTask);
+                          } else {
+                            tasks[index] = newTask;
+                          }
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: Text(task == null ? "Ajouter" : "Modifier"),
                     ),
-
-                    const SizedBox(width: 10),
-
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text("Annuler"),
-                      ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Annuler"),
                     ),
-                  ],
-                )
+                  ),
+                ]),
               ],
             ),
           ),
@@ -192,47 +188,68 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
     );
   }
 
-  
   void deleteTask(int index) {
-    setState(() {
-      tasksByDate[dateKey]!.removeAt(index);
-    });
+    setState(() => tasks.removeAt(index));
   }
 
-  Future sendTasks() async {
-    if (tasks.isEmpty) return;
+  
+  Future<bool> sendTasks() async {
+  if (tasks.isEmpty) return true;
+  setState(() => _isSending = true);
 
-    Map<String, List<Map<String, dynamic>>> grouped = {};
+  try {
+    final patientId = await _getPatientId();
+    if (patientId == null) {
+      _showSnack('Aucun patient lié');
+      return false;
+    }
 
+    await supabase
+        .from('tasks')
+        .delete()
+        .eq('patient_id', patientId)
+        .eq('task_date', dateKey);
+
+    final Map<String, List<Map<String, dynamic>>> grouped = {};
     for (var t in tasks) {
-      grouped.putIfAbsent(t["type"], () => []);
-      grouped[t["type"]]!.add(t);
+      grouped.putIfAbsent(t['type'], () => []);
+      grouped[t['type']]!.add(t);
     }
 
     for (var type in grouped.keys) {
       final info = taskTypes[type]!;
-
-      await SupabaseService.client.from('tasks').insert({
-        "patient_id": SupabaseService.patientId,
-        "task_date": selectedDate.toIso8601String(),
-        "title": type,
-        "color": info["color"],
-        "image": info["image"],
-        "sub_tasks": grouped[type]!
-            .map((t) => {
-                  "title": "${t["time"]} ${t["detail"]}"
-                })
-            .toList(),
-        "status": {}
+      await supabase.from('tasks').insert({
+        'patient_id': patientId,
+        'task_date':  dateKey,
+        'title':      type,
+        'color':      info['color'],
+        'image':      info['image'],
+        'sub_tasks':  grouped[type]!.map((t) => {
+          'title': '${t['time']} ${t['detail']}',
+        }).toList(),
+        'status': {},
       });
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Tâches envoyées")),
-    );
+    _showSnack('Tâches envoyées au patient', isError: false);
+    return true; 
+  } catch (e) {
+    _showSnack('Erreur: $e');
+    return false; 
+  } finally {
+    if (mounted) setState(() => _isSending = false);
+  }
+}
+
+  void _showSnack(String msg, {bool isError = true}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      backgroundColor: isError ? Colors.red : Colors.green,
+      behavior: SnackBarBehavior.floating,
+    ));
   }
 
- 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -245,79 +262,127 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Row(
-              children: [
-                Text(dateKey),
-                IconButton(
-                  onPressed: pickDate,
-                  icon: const Icon(Icons.calendar_month),
-                ),
-                const Spacer(),
-                ElevatedButton.icon(
-                  onPressed: () => addOrEditTask(),
-                  icon: const Icon(Icons.add),
-                  label: const Text("Ajouter tâche"),
-                )
-              ],
-            ),
+            
+            Row(children: [
+              Text(
+                dateKey,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                onPressed: pickDate,
+                icon: const Icon(Icons.calendar_month),
+              ),
+              const Spacer(),
+              ElevatedButton.icon(
+                onPressed: () => addOrEditTask(),
+                icon: const Icon(Icons.add),
+                label: const Text("Ajouter"),
+              ),
+            ]),
 
             const SizedBox(height: 20),
 
+           
             Expanded(
-              child: tasks.isEmpty
-                  ? const Center(child: Text("Aucune tâche"))
-                  : ListView.builder(
-                      itemCount: tasks.length,
-                      itemBuilder: (context, index) {
-                        final t = tasks[index];
-
-                        return ListTile(
-                          title: Text(t["title"]),
-                          subtitle:
-                              Text("${t["time"]} - ${t["detail"]}"),
-
-                        
-                          onTap: () =>
-                              addOrEditTask(task: t, index: index),
-
-                          
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => deleteTask(index),
-                          ),
-                        );
-                      },
-                    ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : tasks.isEmpty
+                      ? const Center(child: Text("Aucune tâche"))
+                      : ListView.builder(
+                          itemCount: tasks.length,
+                          itemBuilder: (context, index) {
+                            final t = tasks[index];
+                            final color = _getColor(t['type']);
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15)),
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: color.withOpacity(0.15),
+                                  child: Image.asset(
+                                    taskTypes[t['type']]!['image']!,
+                                    width: 25,
+                                    errorBuilder: (c, e, s) =>
+                                        Icon(Icons.task_alt, color: color),
+                                  ),
+                                ),
+                                title: Text(t['title'],
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold)),
+                                subtitle: Text(
+                                    '${t['time']} - ${t['detail']}',
+                                    style:
+                                        const TextStyle(color: Colors.grey)),
+                                onTap: () =>
+                                    addOrEditTask(task: t, index: index),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                  onPressed: () => deleteTask(index),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
             ),
 
+            
             if (tasks.isNotEmpty)
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: sendTasks,
-                      child: const Text("Envoyer au patient"),
+              Row(children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _isSending ? null : sendTasks,
+                    icon: _isSending
+                        ? const SizedBox(
+                            width: 18, height: 18,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2))
+                        : const Icon(Icons.send),
+                    label: const Text("Envoyer au patient"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const Tasks(),
-                          ),
-                        );
-                      },
-                      child: const Text("Suivi"),
-                    ),
-                  ),
-                ],
-              )
+                ),
+                const SizedBox(width: 10),
+               
+Expanded(
+  child: ElevatedButton.icon(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const Tasks()),
+      );
+    },
+    icon: const Icon(Icons.track_changes),
+    label: const Text("Suivi"),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.green,
+      foregroundColor: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12)),
+    ),
+  ),
+),
+           ]),
           ],
         ),
       ),
     );
+  }
+
+  Color _getColor(String? type) {
+    switch (type) {
+      case 'orange': return Colors.orange;
+      case 'green':  return Colors.green;
+      case 'lime':   return Colors.lime;
+      default:       return Colors.indigo;
+    }
   }
 }

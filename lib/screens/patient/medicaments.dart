@@ -15,25 +15,28 @@ class _MedicinesPageState extends State<MedicinesPage> {
   final supabase = Supabase.instance.client;
 
   
-  Future<String> _getMedImage(String? capturedUrl, String medName) async {
-    if (capturedUrl != null && capturedUrl.isNotEmpty) {
-      return supabase.storage.from('medicines_bucket').getPublicUrl(capturedUrl);
-    }
+  String _getMedImageUrl(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) return '';
+    if (imageUrl.startsWith('http')) return imageUrl;
+    return supabase.storage
+        .from('medicines_bucket')
+        .getPublicUrl(imageUrl);
+  }
 
-    try {
-      final data = await supabase
-          .from('medication_library')
-          .select('image_url')
-          .ilike('med_name', medName.trim())
-          .maybeSingle();
+  
+  Future<String?> _getPatientId() async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return null;
 
-      if (data != null && data['image_url'] != null) {
-        return data['image_url'] as String;
-      }
-    } catch (e) {
-      print("Erreur Library: $e");
-    }
-    return ""; 
+    final data = await supabase
+        .from('users')
+        .select('linked_to, role')
+        .eq('id', userId)
+        .maybeSingle();
+
+    final role = data?['role'] as String?;
+    if (role == 'patient') return userId;
+    return data?['linked_to'] as String?;
   }
 
   @override
@@ -43,7 +46,7 @@ class _MedicinesPageState extends State<MedicinesPage> {
       body: SafeArea(
         child: Column(
           children: [
-           
+            // ── Header ──────────────────────────────────────
             Padding(
               padding: const EdgeInsets.all(15),
               child: Row(
@@ -61,7 +64,8 @@ class _MedicinesPageState extends State<MedicinesPage> {
                       ),
                       child: TextField(
                         controller: searchController,
-                        onChanged: (value) => setState(() => searchQuery = value.toLowerCase()),
+                        onChanged: (value) =>
+                            setState(() => searchQuery = value.toLowerCase()),
                         decoration: const InputDecoration(
                           border: InputBorder.none,
                           prefixIcon: Icon(Icons.search),
@@ -74,61 +78,119 @@ class _MedicinesPageState extends State<MedicinesPage> {
               ),
             ),
 
-           
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Row(
                 children: [
                   Image.asset(
-                    "assets/pharmacy.png", 
-                    height: 100, 
-                    errorBuilder: (c, e, s) => const Icon(Icons.local_pharmacy, size: 80),
+                    "assets/pharmacy.png",
+                    height: 100,
+                    errorBuilder: (c, e, s) =>
+                        const Icon(Icons.local_pharmacy, size: 80),
                   ),
                   const SizedBox(width: 20),
                   Text(
                     widget.diseaseType,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  )
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ),
 
-           
             const SizedBox(height: 10),
 
             
             Expanded(
-              child: StreamBuilder<List<Map<String, dynamic>>>(
-                stream: supabase
-                    .from('medicines')
-                    .stream(primaryKey: ['id'])
-                    .eq('disease_type', widget.diseaseType),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+              child: FutureBuilder<String?>(
+                future: _getPatientId(),
+                builder: (context, patientSnapshot) {
+                  if (patientSnapshot.connectionState ==
+                      ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text("Aucun médicament trouvé"));
+
+                  final patientId = patientSnapshot.data;
+                  if (patientId == null) {
+                    return const Center(
+                      child: Text("Aucun patient lié",
+                          style: TextStyle(color: Colors.white)),
+                    );
                   }
 
-                  final filtered = snapshot.data!.where((m) {
-                    return m['name'].toString().toLowerCase().contains(searchQuery);
-                  }).toList();
+                  return StreamBuilder<List<Map<String, dynamic>>>(
+                    stream: supabase
+                        .from('patient_medicines')
+                        .stream(primaryKey: ['id'])
+                        .eq('patient_id', patientId),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const Center(
+                            child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(
+                            child: Text("Erreur: ${snapshot.error}"));
+                      }
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.medication_outlined,
+                                  size: 60, color: Colors.white54),
+                              SizedBox(height: 10),
+                              Text(
+                                "Aucun médicament ajouté",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
 
-                  return ListView.builder(
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final med = filtered[index];
-                    
-                      return FutureBuilder<String>(
-                        future: _getMedImage(med['image_url'], med['name'] ?? ""),
-                        builder: (context, imageSnapshot) {
-                          return medicineCard(
-                            imageSnapshot.data ?? "", 
-                            med['name'] ?? "Sans nom",
-                            med['dose'] ?? "",
-                            med['frequency'] ?? 0,
+                      final filtered = snapshot.data!.where((m) {
+                        return m['name']
+                            .toString()
+                            .toLowerCase()
+                            .contains(searchQuery);
+                      }).toList();
+
+                      return ListView.builder(
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final med = filtered[index];
+
+                         
+                          return FutureBuilder<Map<String, dynamic>?>(
+                            future: supabase
+                                .from('medicines')
+                                .select('image_url')
+                                .eq('name', med['name'] ?? '')
+                                .maybeSingle(),
+                            builder: (context, imgSnapshot) {
+                              
+                              final patientImg =
+                                  med['image_url'] as String?;
+                              final libImg =
+                                  imgSnapshot.data?['image_url'] as String?;
+
+                              final imageUrl = _getMedImageUrl(
+                                (patientImg != null &&
+                                        patientImg.isNotEmpty)
+                                    ? patientImg
+                                    : libImg,
+                              );
+
+                              return medicineCard(
+                                imageUrl,
+                                med['name'] ?? "Sans nom",
+                                med['dose'] ?? "",
+                                med['frequency'] ?? 0,
+                              );
+                            },
                           );
                         },
                       );
@@ -143,7 +205,8 @@ class _MedicinesPageState extends State<MedicinesPage> {
     );
   }
 
-  Widget medicineCard(String finalImageUrl, String name, String dose, int freq) {
+  Widget medicineCard(
+      String imageUrl, String name, String dose, int freq) {
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Container(
@@ -154,36 +217,91 @@ class _MedicinesPageState extends State<MedicinesPage> {
         ),
         child: Row(
           children: [
+           
             ClipRRect(
               borderRadius: BorderRadius.circular(15),
-              child: finalImageUrl.isNotEmpty
+              child: imageUrl.isNotEmpty
                   ? Image.network(
-                      finalImageUrl,
+                      imageUrl,
                       height: 80,
                       width: 80,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.medication, size: 50, color: Colors.grey),
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          height: 80,
+                          width: 80,
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2),
+                          ),
+                        );
+                      },
+                      errorBuilder: (c, e, s) => Container(
+                        height: 80,
+                        width: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Icon(Icons.medication,
+                            size: 45, color: Colors.blue),
+                      ),
                     )
-                  : const Icon(Icons.medication, size: 50, color: Colors.grey),
+                  : Container(
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: const Icon(Icons.medication,
+                          size: 45, color: Colors.blue),
+                    ),
             ),
-            const SizedBox(width: 20),
+            const SizedBox(width: 15),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Médicament: $name", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  Text("Dose: $dose", style: const TextStyle(fontSize: 14)),
-                  Text("Fréquence: $freq fois par jour", style: const TextStyle(fontSize: 14, color: Colors.blueGrey)),
+                  Text(
+                    name,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(children: [
+                    const Icon(Icons.scale_outlined,
+                        size: 14, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(
+                      "Dose: $dose",
+                      style: const TextStyle(
+                          fontSize: 13, color: Colors.grey),
+                    ),
+                  ]),
+                  const SizedBox(height: 4),
+                  Row(children: [
+                    const Icon(Icons.access_time,
+                        size: 14, color: Colors.blueGrey),
+                    const SizedBox(width: 4),
+                    Text(
+                      "$freq fois par jour",
+                      style: const TextStyle(
+                          fontSize: 13, color: Colors.blueGrey),
+                    ),
+                  ]),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
     );
   }
 }
-
-
 

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:safemind/screens/patient/patient_profile.dart';
+import 'package:safemind/screens/soignant/caregiver_profile.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:safemind/screens/login.dart';
 import 'package:safemind/screens/person.dart';
@@ -9,19 +11,15 @@ import 'package:safemind/screens/soignant/caregiver.dart';
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
-  Future<Map<String, dynamic>?> getUserData() async {
-    final supabase = Supabase.instance.client;
-    final user = supabase.auth.currentUser;
-
+  Future<Map<String, dynamic>?> _getUserData() async {
+    final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return null;
 
-    final response = await supabase
+    return await Supabase.instance.client
         .from('users')
-        .select('role, patient_filled')
+        .select('role, patient_filled, disease, linked_to, full_name')
         .eq('id', user.id)
         .maybeSingle();
-
-    return response;
   }
 
   @override
@@ -32,84 +30,59 @@ class AuthGate extends StatelessWidget {
       return const LoginPage();
     }
 
-    return FutureBuilder(
-      future: getUserData(),
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: _getUserData(),
       builder: (context, snapshot) {
-
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            backgroundColor: Color(0xff467EB3),
+            body: Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            ),
           );
         }
 
-        final data = snapshot.data;
-        final role = data?['role'];
-        final filled = data?['patient_filled'] ?? false;
+        final data     = snapshot.data;
+        final role     = data?['role'] as String?;
+        final filled   = data?['patient_filled'] as bool? ?? false;
+        final disease  = data?['disease'] as String? ?? '';
+        final linkedTo = data?['linked_to'] as String?;
+        final fullName = data?['full_name'] as String?;
 
        
-        if (role == null) {
+        if (role == null || role.isEmpty) {
           return const Person();
         }
 
-       
-        if (role == "caregiver" && filled == false) {
-          return const PatientForm();
-        }
-
-       
-        if (role == "patient") {
+        
+        if (role == 'patient') {
+          if (fullName == null || fullName.isEmpty) {
+            return const PatientProfileScreen(isFirstTime: true);
+          }
           return const Home();
         }
-  
-        return Caregiver(diseaseType: "Parkinson");
+
+       
+        if (role == 'caregiver') {
+
+          
+          if (fullName == null || fullName.isEmpty || disease.isEmpty) {
+            return const CaregiverProfileScreen(isFirstTime: true);
+          }
+
+         
+          if (!filled) {
+            return PatientForm(preselectedDisease: disease);
+          }
+
+          
+          return Caregiver(diseaseType: disease);
+        }
+
+        
+        return const LoginPage();
       },
     );
   }
 }
-/*
 
-/*
-
-Auth Gate - This will continuously listen for auth state changes.
-
---------------------------------------------------------------------
-
-unauthenticated -> Login Page
-authenticated -> Person
-
-*/
-import 'package:flutter/material.dart';
-import 'package:safemind/screens/login.dart';
-import 'package:safemind/screens/person.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-      // Listen to auth state changes
-      stream: Supabase.instance.client.auth.onAuthStateChange,
-
-      // Build appropriate page based on auth state
-      builder: (context, snapshot) {
-        // loading..
-        if (snapshot.connectionState == ConnectionState.waiting){
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        // check if there is a valid session currently
-        final session = snapshot.hasData ? snapshot.data!.session : null;
-        if (session != null){
-          return Person();
-        } else {
-          return LoginPage();
-        }
-      },
-    );
-  }
-}
-*/

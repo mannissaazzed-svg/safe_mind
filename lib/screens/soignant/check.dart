@@ -12,12 +12,31 @@ class Tasks extends StatefulWidget {
 
 class _TasksState extends State<Tasks> {
   int selectedIndex = 0;
+  bool _isLoading = true;
 
   List<DateTime> days =
       List.generate(14, (i) => DateTime.now().add(Duration(days: i)));
 
   @override
+  void initState() {
+    super.initState();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await SupabaseService.loadPatientId();
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return StreamBuilder<List<TaskModel>>(
       stream: SupabaseService.streamTasksByDate(
         SupabaseService.patientId,
@@ -39,7 +58,6 @@ class _TasksState extends State<Tasks> {
               ),
             ),
           ),
-
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -47,21 +65,32 @@ class _TasksState extends State<Tasks> {
                 buildDaysList(),
                 const SizedBox(height: 25),
 
-                IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      buildTimeline(tasks),
-                      const SizedBox(width: 15),
-
-                      Expanded(
-                        child: Column(
-                          children: tasks.map((t) => buildTaskCard(t)).toList(),
+                tasks.isEmpty
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 60),
+                          child: Text(
+                            "Aucune tâche pour ce jour",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      )
+                    : IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            buildTimeline(tasks),
+                            const SizedBox(width: 15),
+                            Expanded(
+                              child: Column(
+                                children: tasks
+                                    .map((t) => buildTaskCard(t))
+                                    .toList(),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
@@ -70,48 +99,47 @@ class _TasksState extends State<Tasks> {
     );
   }
 
- 
   Widget buildTimeline(List<TaskModel> tasks) {
-    List<Widget> items = [];
+  List<Widget> items = [];
 
-    for (var task in tasks) {
-      for (var sub in task.subTasks) {
-        final text = (sub is Map && sub['title'] != null)
-            ? sub['title']
-            : '';
+  for (var task in tasks) {
+    for (var sub in task.subTasks) {
+      final text = (sub is Map && sub['title'] != null)
+          ? sub['title'] as String
+          : '';
 
-        final key = "${task.id}-$text";
+      
+      final color = task.getStatusColor(text);
 
-        items.add(
-          Column(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                height: 16,
-                width: 16,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  border: Border.all(
-                    color: TaskStatus.getStatus(key),
-                    width: 4,
-                  ),
+      items.add(
+        Column(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              height: 16,
+              width: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                border: Border.all(
+                  color: color, // 
+                  width: 4,
                 ),
               ),
-              Container(
-                height: 75,
-                width: 2,
-                color: Colors.grey.shade200,
-              ),
-            ],
-          ),
-        );
-      }
+            ),
+            Container(
+              height: 75,
+              width: 2,
+              color: Colors.grey.shade200,
+            ),
+          ],
+        ),
+      );
     }
-
-    return Column(children: items);
   }
 
+  return Column(children: items);
+}
   Widget buildTaskCard(TaskModel task) {
     final color = task.getBaseColor();
 
@@ -127,7 +155,12 @@ class _TasksState extends State<Tasks> {
         children: [
           Row(
             children: [
-              Image.asset(task.image, width: 35),
+              Image.asset(
+                task.image,
+                width: 35,
+                errorBuilder: (c, e, s) =>
+                    Icon(Icons.task_alt, color: color),
+              ),
               const SizedBox(width: 10),
               Text(
                 task.title,
@@ -138,9 +171,7 @@ class _TasksState extends State<Tasks> {
               ),
             ],
           ),
-
           const SizedBox(height: 10),
-
           ...task.subTasks.map((e) {
             final text = (e is Map && e['title'] != null)
                 ? e['title']
@@ -159,7 +190,6 @@ class _TasksState extends State<Tasks> {
     );
   }
 
- 
   Widget buildDaysList() {
     return SizedBox(
       height: 60,

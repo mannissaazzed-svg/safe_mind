@@ -28,7 +28,7 @@ class TaskModel {
     );
   }
 
-  // ================= BASE COLOR =================
+  
   Color getBaseColor() {
     switch (color) {
       case 'orange':
@@ -46,14 +46,12 @@ class TaskModel {
     }
   }
 
-  // ================= STATUS COLOR (IMPORTANT) =================
-  Color getStatusColor(String key) {
-    final s = status[key];
-
-    if (s == "green") return Colors.green;
-    if (s == "orange") return Colors.orange;
-    if (s == "red") return Colors.red;
-
-    return getBaseColor();
-  }
+  
+ Color getStatusColor(String subTitle) {
+  final s = status[subTitle];
+  if (s == "green")  return Colors.green;
+  if (s == "orange") return Colors.orange;
+  if (s == "red")    return Colors.red;
+  return Colors.grey; 
+}
 }

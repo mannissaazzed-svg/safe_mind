@@ -7,7 +7,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Nous avons besoin d'accéder à votre galerie pour choisir une image du médicament.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Nous avons besoin d'accéder au microphone (requis par la bibliothèque camera).</string>
+	<string>This app needs microphone access for voice recording.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

@@ -1,13 +1,30 @@
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:safemind/screens/task_model.dart';
 
 class SupabaseService {
   static final client = Supabase.instance.client;
 
-  static String get patientId => client.auth.currentUser!.id;
+  static String? _cachedPatientId;
+
+  static String get patientId => _cachedPatientId ?? client.auth.currentUser!.id;
 
   
+  static Future<void> loadPatientId() async {
+    final userId = client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    final data = await client
+        .from('users')
+        .select('linked_to, role')
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (data != null && data['role'] == 'caregiver' && data['linked_to'] != null) {
+      _cachedPatientId = data['linked_to'] as String;
+    } else {
+      _cachedPatientId = userId;
+    }
+  }
 
   static Future<void> updateLocation({
     required String userId,
@@ -30,7 +47,6 @@ class SupabaseService {
             data.where((e) => e['user_id'] == userId).toList());
   }
 
- 
   static Stream<List<TaskModel>> streamTasksByDate(
     String patientId,
     DateTime date,
@@ -51,7 +67,6 @@ class SupabaseService {
     });
   }
 
-  
   static Future<void> sendTasks(
     String patientId,
     DateTime date,
@@ -63,27 +78,18 @@ class SupabaseService {
       await client.from('tasks').insert({
         "patient_id": patientId,
         "task_date": date.toIso8601String(),
-
         "title": t["title"],
         "type": t["type"],
-
-        
         "color": style["color"],
         "image": style["image"],
-
-        
         "sub_tasks": [
-          {
-            "title": "${t["time"]} ${t["detail"]}"
-          }
+          {"title": "${t["time"]} ${t["detail"]}"}
         ],
-
         "status": {}
       });
     }
   }
 
- 
   static Future<void> updateTask({
     required String taskId,
     required String title,
@@ -104,43 +110,43 @@ class SupabaseService {
     }).eq('id', taskId);
   }
 
-  
   static Future<void> deleteTask(String taskId) async {
     await client.from('tasks').delete().eq('id', taskId);
   }
 
-  
   static Map<String, String> getTaskStyle(String type) {
     switch (type) {
       case "food":
-        return {
-          "color": "orange",
-          "image": "assets/food.png"
-        };
-
+        return {"color": "orange", "image": "assets/food.png"};
       case "sport":
-        return {
-          "color": "green",
-          "image": "assets/sport.png"
-        };
-
+        return {"color": "green", "image": "assets/sport.png"};
       case "brain":
-        return {
-          "color": "lime",
-          "image": "assets/brain.png"
-        };
-
+        return {"color": "lime", "image": "assets/brain.png"};
       case "doctor":
-        return {
-          "color": "red",
-          "image": "assets/doctor.png"
-        };
-
+        return {"color": "red", "image": "assets/doctor.png"};
       default:
-        return {
-          "color": "indigo",
-          "image": "assets/medicine.png"
-        };
+        return {"color": "indigo", "image": "assets/medicine.png"};
     }
   }
+
+  static Future<void> updateTaskStatus({
+  required String taskId,
+  required String subKey,
+  required String color,
+}) async {
+  final data = await client
+      .from('tasks')
+      .select('status')
+      .eq('id', taskId)
+      .maybeSingle();
+
+  final currentStatus = Map<String, dynamic>.from(data?['status'] ?? {});
+  currentStatus[subKey] = color;
+
+  await client
+      .from('tasks')
+      .update({'status': currentStatus})
+      .eq('id', taskId);
 }
+}
+

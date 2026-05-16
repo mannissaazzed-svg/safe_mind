@@ -4,6 +4,7 @@ import 'package:safemind/screens/soignant/formulaire.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:safemind/services/auth/auth_service.dart';
+import 'package:safemind/screens/soignant/caregiver_profile.dart';
 import 'sign_up.dart';
 import 'person.dart';
 
@@ -55,7 +56,7 @@ void login() async {
     else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const PatientForm()),
+        MaterialPageRoute(builder: (_) => const CaregiverProfileScreen()),
       );
     }
 
@@ -236,23 +237,30 @@ void login() async {
                         children: [
 
                           socialIcon(
-                              FontAwesomeIcons.apple,
-                              Colors.black
-                          ),
+                            FontAwesomeIcons.apple,
+                            Colors.black,
+                            () async {await authService.signInWithApple();
+                            },
+                            ),
 
                           const SizedBox(width:20),
 
                           socialIcon(
-                              FontAwesomeIcons.google,
-                              Colors.red
-                          ),
+                            FontAwesomeIcons.google,Colors.red,
+                            () async {
+                              await authService.signInWithGoogle();
+                              },
+                              ),
 
                           const SizedBox(width:20),
 
                           socialIcon(
-                              FontAwesomeIcons.facebook,
-                              Colors.blue
-                          ),
+                            FontAwesomeIcons.facebook,
+                            Colors.blue,
+                            () async {
+                              await authService.signInWithFacebook();
+                              },
+                              ),
 
                         ],
 
@@ -304,39 +312,26 @@ void login() async {
   }
 
 
-  Widget socialIcon(IconData icon, Color color){
-
-    return Container(
-
+  Widget socialIcon(IconData icon, Color color, VoidCallback onTap) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
       padding: const EdgeInsets.all(12),
-
       decoration: BoxDecoration(
-
-          color: Colors.white,
-
-          shape: BoxShape.circle,
-
-          boxShadow: [
-
-            BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8
-            )
-
-          ]
-
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 8)
+        ],
       ),
-
       child: Icon(
         icon,
         color: color,
         size: 22,
       ),
-
-    );
-
-  }
-
+    ),
+  );
+}
 }
 
 
