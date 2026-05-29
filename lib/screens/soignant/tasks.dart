@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:safemind/screens/soignant/check.dart';
+import 'package:safemind/generated/l10n/app_localizations.dart';
 
 class CaregiverAddTasks extends StatefulWidget {
   const CaregiverAddTasks({super.key});
@@ -45,6 +46,7 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
 
   
   Future<void> _loadTasks() async {
+    final t = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
     try {
       final patientId = await _getPatientId();
@@ -73,7 +75,7 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
         }
       });
     } catch (e) {
-      _showSnack('Erreur chargement: $e');
+      _showSnack('${t.errorLoading}: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -93,6 +95,7 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
   }
 
   void addOrEditTask({Map<String, dynamic>? task, int? index}) {
+    final t = AppLocalizations.of(context)!;
     final titleCtrl  = TextEditingController(text: task?['title']  ?? '');
     final detailCtrl = TextEditingController(text: task?['detail'] ?? '');
     TimeOfDay selectedTime = task != null
@@ -114,20 +117,20 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  task == null ? "Nouvelle tâche" : "Modifier tâche",
+                  task == null ? "Nouvelle tâche" : t.editTask,
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: titleCtrl,
-                  decoration: const InputDecoration(
-                    hintText: "Titre", border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    hintText: t.title, border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: detailCtrl,
-                  decoration: const InputDecoration(
-                    hintText: "Détails", border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    hintText: t.details, border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 10),
                 Row(children: [
@@ -169,14 +172,14 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
                         });
                         Navigator.pop(context);
                       },
-                      child: Text(task == null ? "Ajouter" : "Modifier"),
+                      child: Text(task == null ? t.add : t.edit),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text("Annuler"),
+                      child: Text(t.cancel),
                     ),
                   ),
                 ]),
@@ -194,13 +197,14 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
 
   
   Future<bool> sendTasks() async {
+    final t = AppLocalizations.of(context)!;
   if (tasks.isEmpty) return true;
   setState(() => _isSending = true);
 
   try {
     final patientId = await _getPatientId();
     if (patientId == null) {
-      _showSnack('Aucun patient lié');
+      _showSnack(t.noLinkedPatient);
       return false;
     }
 
@@ -231,10 +235,10 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
       });
     }
 
-    _showSnack('Tâches envoyées au patient', isError: false);
+    _showSnack(t.addSuccess, isError: false);
     return true; 
   } catch (e) {
-    _showSnack('Erreur: $e');
+    _showSnack('${t.error}:$e');
     return false; 
   } finally {
     if (mounted) setState(() => _isSending = false);
@@ -252,9 +256,10 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Planifier les tâches"),
+        title: Text(t.planTasks),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
       ),
@@ -276,7 +281,7 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
               ElevatedButton.icon(
                 onPressed: () => addOrEditTask(),
                 icon: const Icon(Icons.add),
-                label: const Text("Ajouter"),
+                label: Text(t.add),
               ),
             ]),
 
@@ -287,7 +292,7 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : tasks.isEmpty
-                      ? const Center(child: Text("Aucune tâche"))
+                      ? Center(child: Text(t.noTasks))
                       : ListView.builder(
                           itemCount: tasks.length,
                           itemBuilder: (context, index) {
@@ -339,7 +344,7 @@ class _CaregiverAddTasksState extends State<CaregiverAddTasks> {
                             child: CircularProgressIndicator(
                                 color: Colors.white, strokeWidth: 2))
                         : const Icon(Icons.send),
-                    label: const Text("Envoyer au patient"),
+                    label: Text(t.sendToPatient),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.indigo,
                       foregroundColor: Colors.white,
@@ -360,7 +365,7 @@ Expanded(
       );
     },
     icon: const Icon(Icons.track_changes),
-    label: const Text("Suivi"),
+    label: Text(t.followUp),
     style: ElevatedButton.styleFrom(
       backgroundColor: Colors.green,
       foregroundColor: Colors.white,
@@ -386,3 +391,4 @@ Expanded(
     }
   }
 }
+

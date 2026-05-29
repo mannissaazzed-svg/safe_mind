@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:safemind/screens/contact_page.dart';
+import 'package:safemind/screens/patient/patient_location.dart';
+import 'package:safemind/screens/rendez_vous.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:safemind/services/auth/auth_service.dart';
 import 'package:safemind/screens/notifications.dart';
@@ -8,8 +10,9 @@ import 'package:safemind/screens/patient/medicaments.dart';
 import 'package:safemind/screens/patient/nutrition.dart';
 import 'package:safemind/screens/patient/patient.dart';
 import 'package:safemind/screens/patient/patient_profile.dart';
-import 'package:safemind/screens/patient/patient_location.dart';
 import 'package:safemind/screens/login.dart';
+import 'package:safemind/generated/l10n/app_localizations.dart';
+
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -95,23 +98,24 @@ class _HomeState extends State<Home> {
   }
 
   void _showLogoutDialog() {
+    final t = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Déconnexion"),
+        title: Text(t.logout),
         content:
-            const Text("Êtes-vous sûr de vouloir vous déconnecter ?"),
+            Text(t.logoutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Annuler"),
+            child: Text(t.cancel),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _performLogout();
             },
-            child: const Text("Confirmer",
+            child: Text(t.confirm,
                 style: TextStyle(color: Colors.red)),
           ),
         ],
@@ -134,7 +138,7 @@ class _HomeState extends State<Home> {
     setState(() => selectedNav = index);
     if (index == 1) {
       await Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const PatientProfileScreen()));
+          MaterialPageRoute(builder: (_) => const ContactsPage()));
     } else if (index == 2) {
       await Navigator.push(context,
           MaterialPageRoute(builder: (_) => const PatientPage()));
@@ -147,6 +151,7 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Scaffold(
       drawer: _buildDrawer(),
       backgroundColor: const Color.fromARGB(255, 173, 214, 239),
@@ -156,19 +161,19 @@ class _HomeState extends State<Home> {
             child: Column(
               children: [
                 _buildTopHeader(context),
-                _buildSectionTitle("Catégories"),
+                _buildSectionTitle(t.categories),
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _categoryItem(
-                      "Alzheimer",
+                      t.alzheimer,
                       "assets/alzheimer.png",
                       selectedCategory == 0 || isBothDiseases,
                     ),
                     const SizedBox(width: 30),
                     _categoryItem(
-                      "Parkinson",
+                      t.parkinson,
                       "assets/parkinson.png",
                       selectedCategory == 1 || isBothDiseases,
                     ),
@@ -191,7 +196,7 @@ class _HomeState extends State<Home> {
                       crossAxisSpacing: 15,
                       childAspectRatio: 0.85,
                       children: [
-                        _serviceWrapper("assets/med.png", "Médicaments",
+                        _serviceWrapper("assets/med.png", t.medicines,
                             () {
                           final d = isBothDiseases
                               ? "Alzheimer & Parkinson"
@@ -205,7 +210,7 @@ class _HomeState extends State<Home> {
                                       MedicinesPage(diseaseType: d)));
                         }),
                         _serviceWrapper(
-                            "assets/nutrition.png", "Nutrition", () {
+                            "assets/nutrition.png", t.nutrition, () {
                           final d = isBothDiseases
                               ? "Alzheimer & Parkinson"
                               : (selectedCategory == 0
@@ -218,9 +223,13 @@ class _HomeState extends State<Home> {
                                       HealthAnalysis(diseaseType: d)));
                         }),
                         _serviceWrapper(
-                            "assets/rendezvous.png", "Rendez-vous",
-                            () {}),
-                        _serviceWrapper("assets/ex.png", "Exercices",
+                            "assets/rendezvous.png", t.appointments,
+                            () {Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      const RendezVous()));}),
+                        _serviceWrapper("assets/ex.png", t.exercises,
                             () {
                           Navigator.push(
                               context,
@@ -232,7 +241,7 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                 ),
-                _buildEmergencyButton(),
+               
                 const SizedBox(height: 20),
               ],
             ),
@@ -290,6 +299,7 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildDrawer() {
+    final t = AppLocalizations.of(context)!;
     return Drawer(
       child: Container(
         decoration: const BoxDecoration(
@@ -333,7 +343,7 @@ class _HomeState extends State<Home> {
               accountEmail: Text(
                   _supabase.auth.currentUser?.email ?? ""),
             ),
-            _drawerItem(Icons.person_outline, "Mon Profil", () async {
+            _drawerItem(Icons.person_outline, t.myProfile, () async {
               Navigator.pop(context);
               await Navigator.push(
                   context,
@@ -341,11 +351,11 @@ class _HomeState extends State<Home> {
                       builder: (_) => const PatientProfileScreen()));
               _fetchUserData();
             }),
-            _drawerItem(Icons.map_outlined, "Carte", () {
+            _drawerItem(Icons.map_outlined, t.map, () {
               Navigator.pop(context);
               _openPatientMap();
             }),
-            _drawerItem(Icons.chat_bubble_outline, "Messages", () {
+            _drawerItem(Icons.chat_bubble_outline, t.messages, () {
               Navigator.pop(context);
               Navigator.push(
                   context,
@@ -353,7 +363,7 @@ class _HomeState extends State<Home> {
                       builder: (_) => const ContactsPage()));
             }),
             _drawerItem(Icons.notifications_none_rounded,
-                "Notifications", () {
+                t.notifications, () {
               Navigator.pop(context);
               Navigator.push(
                   context,
@@ -362,7 +372,7 @@ class _HomeState extends State<Home> {
             }),
             const Spacer(),
             _drawerItem(
-                Icons.logout_rounded, "Déconnexion", _showLogoutDialog,
+                Icons.logout_rounded, t.logout, _showLogoutDialog,
                 isLogout: true),
             const SizedBox(height: 40),
           ],
@@ -483,17 +493,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildEmergencyButton() {
-    return Container(
-      height: 76,
-      width: 194,
-      decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 255, 37, 21),
-          borderRadius: BorderRadius.circular(20)),
-      child: Center(
-          child: Image.asset("assets/alert.png", height: 92)),
-    );
-  }
+ 
 
   Widget _drawerItem(IconData icon, String title, VoidCallback onTap,
       {bool isLogout = false}) {

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:safemind/screens/patient/patient_profile.dart';
 import 'package:safemind/screens/soignant/caregiver_profile.dart';
@@ -85,4 +86,3 @@ class AuthGate extends StatelessWidget {
     );
   }
 }
-

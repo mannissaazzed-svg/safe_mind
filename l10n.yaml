@@ -1,0 +1,14 @@
+#arb-dir: lib/l10n
+#template-arb-file: app_fr.arb
+#output-localization-file: app_localizations.dart
+
+arb-dir: lib/l10n
+template-arb-file: app_fr.arb
+output-localization-file: app_localizations.dart
+
+# 1. إلغاء الحزمة الاصطناعية وتحديد مسار التوليد الجديد داخل الـ lib
+synthetic-package: false
+output-dir: lib/generated/l10n
+
+# 2. توليد ملف نصي يكشف لك النصوص الثلاثة المفقودة تلقائياً
+untranslated-messages-file: missing_translations.json

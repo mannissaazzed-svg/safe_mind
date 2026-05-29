@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:safemind/generated/l10n/app_localizations_ar.dart';
 import 'dart:async';
 import 'package:safemind/services/supabase_service.dart';
 import 'package:safemind/screens/task_model.dart';
 import 'package:safemind/screens/task_status.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:safemind/generated/l10n/app_localizations.dart';
 
 class PatientPage extends StatefulWidget {
   const PatientPage({super.key});
@@ -83,6 +85,7 @@ Future<void> _loadPatientId() async {
 
   
   void showTaskDialog(TaskModel task, String body) {
+  final t = AppLocalizations.of(context)!;
   final key = "${task.id}-$body";
   int attempt = attempts[key] ?? 1;
 
@@ -102,7 +105,12 @@ Future<void> _loadPatientId() async {
                 style: const TextStyle(
                     fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
-            Text("Tentative $attempt\n$body", textAlign: TextAlign.center),
+            //Text("Tentative $attempt\n$body",
+             Text(
+                "${t.attempt} $attempt\n$body",
+                textAlign: TextAlign.center,
+              ),
+           
             const SizedBox(height: 20),
             Row(
               children: [
@@ -135,7 +143,7 @@ Future<void> _loadPatientId() async {
 
                       setState(() {});
                     },
-                    child: const Text("Confirmer",
+                    child:  Text(t.confirm,
                         style: TextStyle(color: Colors.white)),
                   ),
                 ),
@@ -177,7 +185,7 @@ Future<void> _loadPatientId() async {
 
                       setState(() {});
                     },
-                    child: const Text("Annuler",
+                    child: Text(t.cancel,
                         style: TextStyle(color: Colors.white)),
                   ),
                 ),
@@ -193,6 +201,8 @@ Future<void> _loadPatientId() async {
   
   @override
   Widget build(BuildContext context) {
+
+    final t = AppLocalizations.of(context)!;
     return StreamBuilder<List<TaskModel>>(
       stream: _patientId == null
     ? const Stream.empty()
@@ -205,7 +215,7 @@ Future<void> _loadPatientId() async {
         return Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
-            title: const Text("Mes tâches"),
+            title: Text(t.myTasks),
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
           ),

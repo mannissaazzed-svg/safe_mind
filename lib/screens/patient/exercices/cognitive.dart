@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:safemind/screens/patient/intrus_game.dart';
-import 'package:safemind/screens/patient/jeux.dart';
 import 'package:safemind/screens/patient/puzzle_game.dart';
 import 'package:safemind/screens/patient/math_game.dart';
 

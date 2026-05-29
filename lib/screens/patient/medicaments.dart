@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:safemind/generated/l10n/app_localizations.dart';
 
 class MedicinesPage extends StatefulWidget {
   final String diseaseType;
@@ -41,6 +42,8 @@ class _MedicinesPageState extends State<MedicinesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: const Color(0xff8EA7BF),
       body: SafeArea(
@@ -66,10 +69,10 @@ class _MedicinesPageState extends State<MedicinesPage> {
                         controller: searchController,
                         onChanged: (value) =>
                             setState(() => searchQuery = value.toLowerCase()),
-                        decoration: const InputDecoration(
+                        decoration:  InputDecoration(
                           border: InputBorder.none,
                           prefixIcon: Icon(Icons.search),
-                          hintText: "Rechercher médicament",
+                          hintText: t.searchMedicine,
                         ),
                       ),
                     ),
@@ -112,8 +115,8 @@ class _MedicinesPageState extends State<MedicinesPage> {
 
                   final patientId = patientSnapshot.data;
                   if (patientId == null) {
-                    return const Center(
-                      child: Text("Aucun patient lié",
+                    return  Center(
+                      child: Text(t.noLinkedPatient,
                           style: TextStyle(color: Colors.white)),
                     );
                   }
@@ -134,7 +137,7 @@ class _MedicinesPageState extends State<MedicinesPage> {
                             child: Text("Erreur: ${snapshot.error}"));
                       }
                       if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(
+                        return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -142,7 +145,7 @@ class _MedicinesPageState extends State<MedicinesPage> {
                                   size: 60, color: Colors.white54),
                               SizedBox(height: 10),
                               Text(
-                                "Aucun médicament ajouté",
+                                t.noMedicines,
                                 style: TextStyle(
                                     color: Colors.white, fontSize: 16),
                               ),
@@ -186,9 +189,10 @@ class _MedicinesPageState extends State<MedicinesPage> {
 
                               return medicineCard(
                                 imageUrl,
-                                med['name'] ?? "Sans nom",
+                                med['name'] ?? t.noName,
                                 med['dose'] ?? "",
                                 med['frequency'] ?? 0,
+                                t,
                               );
                             },
                           );
@@ -206,7 +210,7 @@ class _MedicinesPageState extends State<MedicinesPage> {
   }
 
   Widget medicineCard(
-      String imageUrl, String name, String dose, int freq) {
+      String imageUrl, String name, String dose, int freq, AppLocalizations t) {
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Container(
@@ -279,7 +283,7 @@ class _MedicinesPageState extends State<MedicinesPage> {
                         size: 14, color: Colors.grey),
                     const SizedBox(width: 4),
                     Text(
-                      "Dose: $dose",
+                      "${t.dose}:$dose",
                       style: const TextStyle(
                           fontSize: 13, color: Colors.grey),
                     ),
@@ -290,7 +294,7 @@ class _MedicinesPageState extends State<MedicinesPage> {
                         size: 14, color: Colors.blueGrey),
                     const SizedBox(width: 4),
                     Text(
-                      "$freq fois par jour",
+                      "$freq ${t.timesPerDay}",
                       style: const TextStyle(
                           fontSize: 13, color: Colors.blueGrey),
                     ),

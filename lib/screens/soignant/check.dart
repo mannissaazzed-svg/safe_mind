@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:safemind/services/supabase_service.dart';
 import 'package:safemind/screens/task_model.dart';
 import 'package:safemind/screens/task_status.dart';
+import 'package:safemind/generated/l10n/app_localizations.dart';
+
 
 class Tasks extends StatefulWidget {
   const Tasks({super.key});
@@ -30,6 +32,7 @@ class _TasksState extends State<Tasks> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: Colors.white,
@@ -50,8 +53,8 @@ class _TasksState extends State<Tasks> {
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0,
-            title: const Text(
-              "Suivi Patient",
+            title: Text(
+              t.patientTracking,
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
@@ -62,15 +65,15 @@ class _TasksState extends State<Tasks> {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                buildDaysList(),
+                buildDaysList(t),
                 const SizedBox(height: 25),
 
                 tasks.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Padding(
                           padding: EdgeInsets.only(top: 60),
                           child: Text(
-                            "Aucune tâche pour ce jour",
+                            t.noTasksForDay,
                             style: TextStyle(color: Colors.grey),
                           ),
                         ),
@@ -190,7 +193,10 @@ class _TasksState extends State<Tasks> {
     );
   }
 
-  Widget buildDaysList() {
+  Widget buildDaysList(AppLocalizations t) {
+    final week = [
+      t.mon,t.tue,t.wed,t.thu,t.fri,t.sat,t.sun,
+    ];
     return SizedBox(
       height: 60,
       child: ListView.builder(
@@ -213,8 +219,8 @@ class _TasksState extends State<Tasks> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
-                        [d.weekday - 1],
+                   
+                        week[d.weekday - 1],
                     style: TextStyle(
                       color: isSelected ? Colors.white : Colors.black,
                     ),

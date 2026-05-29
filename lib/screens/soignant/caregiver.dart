@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:safemind/screens/contact_page.dart';
 import 'package:safemind/screens/notifications.dart';
 import 'package:safemind/screens/patient/call.dart';
+import 'package:safemind/screens/rendez_vous.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:safemind/screens/soignant/map.dart';
 import 'package:safemind/screens/soignant/medicine_form.dart';
@@ -9,7 +10,8 @@ import 'package:safemind/screens/soignant/tasks.dart';
 import 'package:safemind/screens/login.dart';
 import 'package:safemind/services/auth/auth_service.dart';
 import 'package:safemind/screens/soignant/caregiver_profile.dart';
-import 'package:safemind/screens/soignant/rendez_vous.dart';
+import 'package:safemind/screens/rendez_vous.dart';
+import 'package:safemind/generated/l10n/app_localizations.dart';
 
 class Caregiver extends StatefulWidget {
   final String diseaseType;
@@ -78,19 +80,20 @@ class _CaregiverState extends State<Caregiver> {
 
   
   Future<void> _logout() async {
+    final t = AppLocalizations.of(context)!;
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Déconnexion'),
-        content: const Text('Etes-vous sur de vouloir vous déconnecter ?'),
+        title: Text(t.logout),
+        content: Text(t.logoutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler')),
+            child: Text(t.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Confirmer', style: TextStyle(color: Colors.red))),
+            child: Text(t.confirm, style: TextStyle(color: Colors.red))),
         ],
       ),
     );
@@ -103,11 +106,12 @@ class _CaregiverState extends State<Caregiver> {
   }
 
   Future<void> _openCompanionMap() async {
+    final t = AppLocalizations.of(context)!;
     final supabase = Supabase.instance.client;
     final userId = supabase.auth.currentUser?.id;
 
     if (userId == null) {
-      _showSnack('Veuillez d abord vous connecter');
+      _showSnack(t.notConnected);
       return;
     }
 
@@ -120,7 +124,7 @@ class _CaregiverState extends State<Caregiver> {
 
       final patientId = data?['linked_to'] as String?;
       if (patientId == null) {
-        _showSnack('Aucun compte patient n est encore lié ');
+        _showSnack(t.noPatientLinked);
         return;
       }
 
@@ -131,7 +135,7 @@ class _CaregiverState extends State<Caregiver> {
           .maybeSingle();
 
       if (pData == null) {
-        _showSnack('Données patient introuvables');
+        _showSnack(t.patientNotFound);
         return;
       }
 
@@ -149,7 +153,7 @@ class _CaregiverState extends State<Caregiver> {
         ),
       );
     } catch (e) {
-      _showSnack('Erreur de connexion');
+      _showSnack(t.connectionError);
     }
   }
 
@@ -181,12 +185,13 @@ class _CaregiverState extends State<Caregiver> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
       body: Column(
         children: [
-          _buildHeader(),
+          _buildHeader(t),
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -201,21 +206,21 @@ class _CaregiverState extends State<Caregiver> {
                   children: [
                     _buildGridItem(
                       'assets/check_list.png',
-                      "Suivi quotidien",
+                      t.dailyFollowUp,
                       const Color(0xFFF9F5C0),
                       onTap: () => Navigator.push(context,
                           MaterialPageRoute(builder: (_) => const CaregiverAddTasks())),
                     ),
                     _buildGridItem(
                       'assets/doctor.png',
-                      "Médecin",
+                      t.doctor,
                       const Color(0xFFF9C5C0),
                       onTap: () => Navigator.push(context,
                           MaterialPageRoute(builder: (_) => const RendezVous())),
                     ),
                     _buildGridItem(
                       'assets/m.png',
-                      "Médicaments",
+                      t.medications,
                       const Color(0xFF94B3FF),
                       onTap: () => Navigator.push(context,
                           MaterialPageRoute(
@@ -223,7 +228,7 @@ class _CaregiverState extends State<Caregiver> {
                     ),
                     _buildGridItem(
                       'assets/maps.png',
-                      "Localisation",
+                      t.location,
                       const Color(0xFFC5FFD5),
                       onTap: _openCompanionMap,
                     ),
@@ -238,7 +243,7 @@ class _CaregiverState extends State<Caregiver> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppLocalizations t) {
     final avatarUrl = caregiverData?['avatar_url'] as String?;
     final name = caregiverData?['full_name'] as String? ?? '';
     final patientName = patientData?['full_name'] as String? ?? '';
@@ -305,7 +310,7 @@ class _CaregiverState extends State<Caregiver> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                name.isNotEmpty ? name : 'Caregiver',
+                                name.isNotEmpty ? name : t.accompanying,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -321,7 +326,7 @@ class _CaregiverState extends State<Caregiver> {
                                 ),
                               ),
                               Text(
-                                patientName.isNotEmpty ? patientName : 'Aucun patient lié',
+                                patientName.isNotEmpty ? patientName : t.noPatient,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 13,

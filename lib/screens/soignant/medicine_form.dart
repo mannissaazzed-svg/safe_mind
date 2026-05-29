@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:safemind/generated/l10n/app_localizations.dart';
 
 class MedicineForm extends StatefulWidget {
   final String diseaseType;
@@ -60,6 +61,7 @@ class _MedicineFormState extends State<MedicineForm> {
 
   
   void _showSuggestions() {
+    final t = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -83,7 +85,7 @@ class _MedicineFormState extends State<MedicineForm> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Text(
-                'Médicaments ${widget.diseaseType}',
+                '${t.medicines} ${widget.diseaseType}',
                 style: const TextStyle(
                   fontSize: 18, fontWeight: FontWeight.bold),
               ),
@@ -93,7 +95,7 @@ class _MedicineFormState extends State<MedicineForm> {
               child: _loadingSuggestions
                   ? const Center(child: CircularProgressIndicator())
                   : _suggestions.isEmpty
-                      ? const Center(child: Text('Aucun médicament trouvé'))
+                      ? Center(child: Text(t.noMedicineFound))
                       : ListView.builder(
                           controller: controller,
                           itemCount: _suggestions.length,
@@ -109,7 +111,7 @@ class _MedicineFormState extends State<MedicineForm> {
                                   style: const TextStyle(
                                       fontWeight: FontWeight.w600)),
                               subtitle: Text(
-                                '${med['dose'] ?? ''} · ${med['frequency']}x/jour'),
+                                '${med['dose'] ?? ''} · ${med['frequency']}x/${t.day}'),
                               trailing: const Icon(Icons.arrow_forward_ios,
                                   size: 14, color: Colors.grey),
                               onTap: () => _selectSuggestion(med),
@@ -125,11 +127,12 @@ class _MedicineFormState extends State<MedicineForm> {
 
   
   Future<void> _scanBarcode() async {
+    final t = AppLocalizations.of(context)!;
     await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => Scaffold(
-          appBar: AppBar(title: const Text("Scanner Barcode")),
+          appBar: AppBar(title: Text(t.scanBarcode)),
           body: MobileScanner(
             onDetect: (capture) async {
               final barcodes = capture.barcodes;
@@ -149,6 +152,7 @@ class _MedicineFormState extends State<MedicineForm> {
 
   
   Future<void> _searchMedicine(String barcode) async {
+    final t = AppLocalizations.of(context)!;
     try {
       final data = await supabase
           .from('medicines')
@@ -166,7 +170,7 @@ class _MedicineFormState extends State<MedicineForm> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text(" Médicament trouvé et rempli automatiquement"),
+              content: Text(t.medicineFound),
               backgroundColor: Colors.green[700],
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -184,14 +188,14 @@ class _MedicineFormState extends State<MedicineForm> {
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text(
-                  " Code barre non trouvé → Choisissez dans la liste ou saisissez manuellement"),
+              content: Text(
+                  t.barcodeNotFound),
               backgroundColor: Colors.orange[700],
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
               action: SnackBarAction(
-                label: 'Liste',
+                label: t.list,
                 textColor: Colors.white,
                 onPressed: _showSuggestions,
               ),
@@ -202,16 +206,17 @@ class _MedicineFormState extends State<MedicineForm> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Erreur: $e")));
+            .showSnackBar(SnackBar(content: Text("${t.error}:$e")));
       }
     }
   }
 
   
   Future<void> _handleSave({required bool stayInPage}) async {
+    final t = AppLocalizations.of(context)!;
     if (nomController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Veuillez saisir un médicament")),
+        SnackBar(content: Text(t.fillMedicine)),
       );
       return;
     }
@@ -256,7 +261,7 @@ await supabase.from('patient_medicines').insert({
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text(" Ajouté avec succès !"),
+              content: Text(t.addSuccess),
               backgroundColor: Colors.green[700],
               behavior: SnackBarBehavior.floating,
             ),
@@ -277,6 +282,7 @@ await supabase.from('patient_medicines').insert({
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xffF8FAFF),
       body: Stack(
@@ -368,7 +374,7 @@ await supabase.from('patient_medicines').insert({
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              "Saisie pour ${widget.diseaseType}",
+                              "${t.inputFor} ${widget.diseaseType}",
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -388,16 +394,16 @@ await supabase.from('patient_medicines').insert({
                           ],
                         ),
                         const SizedBox(height: 20),
-                        _buildField("Nom du médicament",
+                        _buildField(t.medicineName,
                             nomController, Icons.edit_note),
                         const SizedBox(height: 20),
-                        _buildField("Dose", doseController, Icons.scale),
+                        _buildField(t.dose, doseController, Icons.scale),
                         const SizedBox(height: 25),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              "Nombre de fois / jour",
+                            Text(
+                              t.timesPerDay,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black45,
@@ -489,6 +495,7 @@ await supabase.from('patient_medicines').insert({
   }
 
   Widget _buildActionButtons() {
+    final t = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
@@ -501,7 +508,7 @@ await supabase.from('patient_medicines').insert({
             ),
             onPressed:
                 _isUploading ? null : () => _handleSave(stayInPage: true),
-            child: const Text("Ajouter un autre",
+            child: Text(t.addMore,
                 style: TextStyle(
                     color: Color(0xff00A3FF), fontWeight: FontWeight.bold)),
           ),
@@ -523,7 +530,7 @@ await supabase.from('patient_medicines').insert({
                     width: 20,
                     child: CircularProgressIndicator(
                         color: Colors.white, strokeWidth: 2))
-                : const Text("Terminer",
+                : Text(t.finish,
                     style: TextStyle(
                         color: Colors.white, fontWeight: FontWeight.bold)),
           ),

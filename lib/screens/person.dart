@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:safemind/screens/medecin/Doctor_Registration.dart';
 import 'package:safemind/screens/patient/patient_profile.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:safemind/screens/soignant/caregiver_profile.dart';
@@ -22,6 +23,7 @@ class _PersonState extends State<Person> {
       final user = supabase.auth.currentUser;
       if (user == null) return;
 
+      
       await supabase
           .from('users')
           .update({'role': role})
@@ -29,25 +31,27 @@ class _PersonState extends State<Person> {
 
       if (!context.mounted) return;
 
+     
       if (role == "patient") {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => const PatientProfileScreen(isFirstTime: true), // ✅
+            builder: (_) => const PatientProfileScreen(isFirstTime: true),
           ),
         );
-      } else if (role == "médecin") {
+      } else if (role == "doctor") {
+       
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) => const MedecinRegistrationPage(),
           ),
         );
-      } else {
+      } else if (role == "caregiver") {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => const CaregiverProfileScreen(isFirstTime: true), // ✅
+            builder: (_) => const CaregiverProfileScreen(isFirstTime: true),
           ),
         );
       }
@@ -55,7 +59,7 @@ class _PersonState extends State<Person> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ: ${e.toString()}'),
+            content: Text('Erreur: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -125,7 +129,8 @@ class _PersonState extends State<Person> {
                       right: 20,
                       child: SizedBox(
                         height: screenHeight * 0.20,
-                        child: Image.asset("assets/int.png", fit: BoxFit.contain),
+                        child: Image.asset("assets/int.png",
+                            fit: BoxFit.contain),
                       ),
                     ),
                     Positioned(
@@ -135,13 +140,19 @@ class _PersonState extends State<Person> {
                       bottom: 60,
                       child: _isLoading
                           ? const Center(
-                              child: CircularProgressIndicator(color: Colors.white))
+                              child: CircularProgressIndicator(
+                                  color: Colors.white))
                           : Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
                               children: [
-                                buildButton("MÉDECIN", () => setRole(context, "médecin")),
-                                buildButton("PATIENT", () => setRole(context, "patient")),
-                                buildButton("AIDE SOIGNANT", () => setRole(context, "caregiver")),
+                                
+                                buildButton("MÉDECIN",
+                                    () => setRole(context, "doctor")),
+                                buildButton("PATIENT",
+                                    () => setRole(context, "patient")),
+                                buildButton("AIDE SOIGNANT",
+                                    () => setRole(context, "caregiver")),
                               ],
                             ),
                     ),
@@ -188,3 +199,4 @@ class _PersonState extends State<Person> {
     );
   }
 }
+

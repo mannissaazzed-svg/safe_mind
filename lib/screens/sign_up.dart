@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:safemind/generated/l10n/app_localizations.dart';
 import 'package:safemind/services/auth/auth_service.dart';
 import 'package:safemind/screens/person.dart';
 
@@ -18,27 +19,29 @@ class _SignUpPageState extends State<SignUpPage> {
   final _confirmPasswordContruoller = TextEditingController();
 
   void signUp() async {
-  final email = _emailController.text.trim();
-  final password = _passwordController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
-  try {
-    await authService.signUpWithEmailPassword(email, password);
+    try {
+      await authService.signUpWithEmailPassword(email, password);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const Person()),
-    );
-
-  } catch (e) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text("$e")));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const Person()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$e")));
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
+
+    final local = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -55,10 +58,9 @@ class _SignUpPageState extends State<SignUpPage> {
               children: [
                 const SizedBox(height: 40),
 
-                
-                const Text(
-                  "Créez votre compte",
-                  style: TextStyle(
+                Text(
+                  local.createAccount,
+                  style: const TextStyle(
                       fontSize: 30,
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -67,7 +69,6 @@ class _SignUpPageState extends State<SignUpPage> {
 
                 const SizedBox(height: 30),
 
-              
                 Container(
                   padding: const EdgeInsets.all(25),
                   decoration: const BoxDecoration(
@@ -86,28 +87,30 @@ class _SignUpPageState extends State<SignUpPage> {
                       buildInputContainer(
                         child: TextField(
                           controller: _emailController,
-                          decoration: const InputDecoration(
-                            hintText: "Adresse email",
-                            prefixIcon: Icon(Icons.email),
+                          decoration: InputDecoration(
+                            hintText: local.emailAddress,
+                            prefixIcon: const Icon(Icons.email),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.all(20),
+                            contentPadding: const EdgeInsets.all(20),
                           ),
                         ),
                       ),
 
                       const SizedBox(height: 20),
 
-                      
                       buildInputContainer(
                         child: TextField(
                           controller: _passwordController,
                           obscureText: isHidden,
                           decoration: InputDecoration(
-                            hintText: "Mot de passe",
+                            hintText: local.password,
                             prefixIcon: const Icon(Icons.lock),
                             suffixIcon: IconButton(
-                              icon: Icon(isHidden ? Icons.visibility_off : Icons.visibility),
-                              onPressed: () => setState(() => isHidden = !isHidden),
+                              icon: Icon(isHidden
+                                  ? Icons.visibility_off
+                                  : Icons.visibility),
+                              onPressed: () =>
+                                  setState(() => isHidden = !isHidden),
                             ),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.all(20),
@@ -117,17 +120,19 @@ class _SignUpPageState extends State<SignUpPage> {
 
                       const SizedBox(height: 20),
 
-                      
                       buildInputContainer(
                         child: TextField(
                           controller: _confirmPasswordContruoller,
                           obscureText: isHidden,
                           decoration: InputDecoration(
-                            hintText: "Confirmez le mot de passe",
+                            hintText: local.confirmPassword,
                             prefixIcon: const Icon(Icons.lock),
                             suffixIcon: IconButton(
-                              icon: Icon(isHidden ? Icons.visibility_off : Icons.visibility),
-                              onPressed: () => setState(() => isHidden = !isHidden),
+                              icon: Icon(isHidden
+                                  ? Icons.visibility_off
+                                  : Icons.visibility),
+                              onPressed: () =>
+                                  setState(() => isHidden = !isHidden),
                             ),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.all(20),
@@ -135,10 +140,8 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                       ),
 
-                    
                       const SizedBox(height: 45),
 
-                     
                       SizedBox(
                         width: 220,
                         height: 55,
@@ -159,10 +162,10 @@ class _SignUpPageState extends State<SignUpPage> {
                                 colors: [Color(0xffF37D7D), Color(0xff594444)],
                               ),
                             ),
-                            child: const Center(
+                            child: Center(
                               child: Text(
-                                "S'inscrire",
-                                style: TextStyle(
+                                local.signUp,
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -175,9 +178,10 @@ class _SignUpPageState extends State<SignUpPage> {
 
                       const SizedBox(height: 30),
 
-                      const Text(
-                        "Ou inscrivez-vous en utilisant",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      Text(
+                        local.signUpUsing,
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 16),
                       ),
 
                       const SizedBox(height: 20),
@@ -205,7 +209,6 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  
   Widget buildInputContainer({required Widget child}) {
     return Container(
       decoration: BoxDecoration(
@@ -231,14 +234,6 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 }
-
-
-
-
-
-
-
-
 
 
 

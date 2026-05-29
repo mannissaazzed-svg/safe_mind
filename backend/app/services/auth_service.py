@@ -1,95 +1,62 @@
-"""
-app/schemas/auth_schemas.py
-Validation des données auth
-"""
-from pydantic import BaseModel, EmailStr
+"""Service d'authentification — inscription, connexion, rôle."""
+from __future__ import annotations
+from app.utils.code_generator import generate_short_code
+import uuid
 from typing import Optional
-from datetime import datetime
+
+from fastapi import HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import hash_password, verify_password
+from app.models.user import User
+from app.schemas.user_schema import RegisterIn
 
 
-# ── Requêtes entrantes ───────────────────────────────
+class AuthService:
 
-class RegisterRequest(BaseModel):
-    """sign_up.dart — signUpWithEmailPassword()"""
-    email: EmailStr
-    password: str
+    @staticmethod
+    async def get_by_id(db: AsyncSession, user_id: str | uuid.UUID) -> Optional[User]:
+        result = await db.execute(select(User).where(User.id == user_id))
+        return result.scalar_one_or_none()
 
+    @staticmethod
+    async def get_by_email(db: AsyncSession, email: str) -> Optional[User]:
+        result = await db.execute(select(User).where(User.email == email))
+        return result.scalar_one_or_none()
 
-class LoginRequest(BaseModel):
-    """login.dart — signInWithEmailPassword()"""
-    email: EmailStr
-    password: str
+    @staticmethod
+    async def register(db: AsyncSession, data: RegisterIn) -> User:
+        existing = await AuthService.get_by_email(db, data.email)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Un compte avec cet email existe déjà",
+            )
+        user = User(
+    email=data.email,
+    hashed_password=hash_password(data.password),
+    )
+        db.add(user)
+        await db.flush()  # id generated
+        user.short_code = generate_short_code(user.id)
+        await db.flush()  # save short_code
+        return user
 
+    @staticmethod
+    async def authenticate(
+        db: AsyncSession, email: str, password: str
+    ) -> Optional[User]:
+        user = await AuthService.get_by_email(db, email)
+        if not user or not user.hashed_password:
+            return None
+        if not verify_password(password, user.hashed_password):
+            return None
+        return user
 
-class OAuthRequest(BaseModel):
-    """login.dart — signInWithGoogle/Facebook/Apple()"""
-    provider: str         # 'google' | 'facebook' | 'apple'
-    oauth_token: str
-    email: Optional[EmailStr] = None
-    full_name: Optional[str]  = None
-    avatar_url: Optional[str] = None
-
-
-class RefreshRequest(BaseModel):
-    refresh_token: str
-
-
-class SetRoleRequest(BaseModel):
-    """person.dart — setRole()"""
-    role: str             # 'patient' | 'caregiver' | 'médecin'
-
-
-class UpdateProfileRequest(BaseModel):
-    """
-    patient_profile.dart — _save()
-    caregiver_profile.dart — _save()
-    """
-    full_name: Optional[str]     = None
-    disease: Optional[str]       = None
-    patient_filled: Optional[bool] = None
-
-
-class LinkByCodeRequest(BaseModel):
-    """link_by_code_widget.dart — _link()"""
-    code: str             # 8 caractères majuscules
-
-
-class UpdateFCMTokenRequest(BaseModel):
-    """Mise à jour token FCM pour notifications push"""
-    fcm_token: str
-
-
-# ── Réponses sortantes ───────────────────────────────
-
-class TokenResponse(BaseModel):
-    access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
-    user_id: str
-    role: Optional[str]      = None
-    full_name: Optional[str] = None
-
-
-class UserResponse(BaseModel):
-    """
-    Réponse complète utilisateur.
-    Utilisée par AuthGate : role, full_name, linked_to, patient_filled, disease
-    """
-    id: str
-    email: str
-    role: Optional[str]       = None
-    full_name: Optional[str]  = None
-    avatar_url: Optional[str] = None
-    linked_to: Optional[str]  = None
-    disease: Optional[str]    = None
-    patient_filled: bool       = False
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class MyCodeResponse(BaseModel):
-    """my_code.dart — code de liaison 8 caractères"""
-    code: str
-    user_id: str
+    @staticmethod
+    async def assign_role(db: AsyncSession, user: User, role: str) -> User:
+        user.role = role
+        db.add(user)
+        await db.flush()
+        return user

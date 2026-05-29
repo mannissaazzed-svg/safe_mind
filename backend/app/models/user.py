@@ -1,103 +1,72 @@
-"""
-app/models/user.py
-Table 'users' — utilisée par TOUTES les pages Flutter
-
-Pages concernées :
-- login.dart           : email, hashed_password
-- sign_up.dart         : création compte
-- person.dart          : role
-- patient_profile.dart : full_name, avatar_url, linked_to, disease, patient_filled
-- caregiver_profile.dart : full_name, avatar_url, linked_to, disease, patient_filled
-- auth_gate.dart       : role, full_name, linked_to, patient_filled, disease
-- home.dart (patient)  : full_name, avatar_url, disease
-- caregiver.dart       : full_name, avatar_url, linked_to
-"""
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Boolean, DateTime, Text, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from sqlalchemy import String, DateTime, Boolean, func, Integer
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column
+
 from app.core.database import Base
 
 
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True,
-        default=lambda: str(uuid.uuid4())
+    
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
     )
 
-    # ── Auth ─────────────────────────────────────────
+    
     email: Mapped[str] = mapped_column(
-        String(255), unique=True, nullable=False, index=True
-    )
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=True)
-
-    # ── Rôle — person.dart ────────────────────────────
-    # 'patient' | 'caregiver' | 'médecin' | null
-    role: Mapped[str] = mapped_column(String(50), nullable=True)
-
-    # ── Profil — patient_profile.dart / caregiver_profile.dart ──
-    full_name: Mapped[str] = mapped_column(String(255), nullable=True)
-    avatar_url: Mapped[str] = mapped_column(Text, nullable=True)
-
-    # ── Maladie — caregiver_profile.dart ─────────────
-    # 'Alzheimer' | 'Parkinson' | 'Alzheimer & Parkinson'
-    disease: Mapped[str] = mapped_column(String(100), nullable=True)
-
-    # ── Liaison — link_by_code_widget.dart ───────────
-    # soignant.linked_to = patient.id  |  patient.linked_to = soignant.id
-    linked_to: Mapped[str] = mapped_column(
-        UUID(as_uuid=False),
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
+        String(255),
+        unique=True,
+        index=True,
+        nullable=False
     )
 
-    # ── formulaire.dart — PatientForm ────────────────
-    patient_filled: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False
+    hashed_password: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
     )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    # ── OAuth ─────────────────────────────────────────
-    oauth_provider: Mapped[str] = mapped_column(String(50), nullable=True)
-    oauth_id: Mapped[str] = mapped_column(String(255), nullable=True)
+   
+    full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    # ── FCM — notifications.dart ──────────────────────
-    fcm_token: Mapped[str] = mapped_column(String(500), nullable=True)
+    role: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    disease: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    avatar_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    
+    linked_to: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    linked_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    associated_patient_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+
+    connection_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    short_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    doctor_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    
+    patient_filled: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_online: Mapped[bool] = mapped_column(Boolean, default=False)
+    name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    patient_age: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    patient_phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    patient_genre: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+    symptoms: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+   
+    last_seen: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True),
+        server_default=func.now()
     )
 
-    # ── Relations ────────────────────────────────────
-    tasks: Mapped[list["Task"]] = relationship(           # noqa
-        "Task", back_populates="patient",
-        foreign_keys="Task.patient_id"
-    )
-    location: Mapped["PatientLocation"] = relationship(   # noqa
-        "PatientLocation", back_populates="user", uselist=False
-    )
-    notifications: Mapped[list["Notification"]] = relationship( # noqa
-        "Notification", back_populates="user"
-    )
-    patient_medicines: Mapped[list["PatientMedicine"]] = relationship( # noqa
-        "PatientMedicine", back_populates="patient",
-        foreign_keys="PatientMedicine.patient_id"
-    )
-    safe_zone: Mapped["SafeZone"] = relationship(         # noqa
-        "SafeZone", back_populates="patient", uselist=False
-    )
-    saved_places: Mapped[list["SavedPlace"]] = relationship( # noqa
-        "SavedPlace", back_populates="user"
-    )
-    alerts_as_patient: Mapped[list["Alert"]] = relationship( # noqa
-        "Alert", back_populates="patient",
-        foreign_keys="Alert.patient_id"
-    )
-
-    def __repr__(self):
-        return f"<User {self.email} role={self.role}>"
+    def __repr__(self) -> str:
+        return f"<User {self.email}>"

@@ -344,32 +344,31 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
 
   Future<void> _startCall(String type) async {
-  final channelId = const Uuid().v4();
-  
-  // 1. هنا نقوم باستقبال الـ callId الذي يعود من قاعدة البيانات
-  // افترض أن دالة startCall تعيد الـ ID الخاص بالمكالمة (أو قم بتعديلها لتعيده)
-  final callId = await CallService().startCall(
-    callerId: _myId,
-    receiverId: widget.receiverId,
-    channelId: channelId,
-    type: type,
-  );
+    final channelId = const Uuid().v4();
+    
+    // 1. قمنا بتسمية المتغير هنا باسم result لكي يتعرف عليه السطر السفلي
+    final result = await CallService().startCall(
+      callerId: _myId,
+      receiverId: widget.receiverId,
+      channelId: channelId,
+      type: type,
+    );
 
-  if (!mounted) return;
+    if (!mounted) return;
 
-  // 2. هنا نقوم بتمرير الـ callId إلى صفحة الفيديو
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => VideoCallPage(
-        channelId: channelId,
-        appId: 'feaef859a6c740ee9880322144128c96',
-        callId: callId ?? '' ,
-        isVoiceOnly: type == 'audio',
+    // 2. هنا يتم استخراج النص بنجاح دون أي تعارض
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => VideoCallPage(
+          channelId: channelId,
+          appId: 'feaef859a6c740ee9880322144128c96',
+          callId: result.callId ?? '', 
+          isVoiceOnly: type == 'audio',
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   // ══════════════════════════════════════════════════════
   // MENU PIÈCES JOINTES

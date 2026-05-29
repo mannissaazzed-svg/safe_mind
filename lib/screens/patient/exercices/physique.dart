@@ -1,10 +1,9 @@
-// physique.dart
 import 'package:flutter/material.dart';
 import 'detail_page.dart';
 
 class Exercice {
   final String titre;
-  final String image; // صورة واحدة فقط
+  final String image;
   final List<String> etapes;
   final IconData icone;
   final Color couleur;

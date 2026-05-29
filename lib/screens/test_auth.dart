@@ -13,8 +13,8 @@ class TestAuthPage extends StatelessWidget {
       body: Center(
         child: Text(
           user == null
-              ? "❌ NOT LOGGED IN"
-              : "✅ LOGGED IN: ${user.id}",
+              ? "NOT LOGGED IN"
+              : "LOGGED IN: ${user.id}",
           style: const TextStyle(fontSize: 18),
         ),
       ),

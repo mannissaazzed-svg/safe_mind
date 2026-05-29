@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'physique.dart';
-
-// GAMES
 import 'package:safemind/screens/patient/math_game.dart';
 import 'package:safemind/screens/patient/intrus_game.dart';
 import 'package:safemind/screens/patient/puzzle_game.dart';
@@ -56,7 +54,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
         children: [
           const SizedBox(height: 20),
 
-          // CATEGORY BUTTONS
+          
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -79,8 +77,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     );
   }
 
-  // ─────────────────────────────
-  // CATEGORY BUTTON
+  
   Widget buildCard(String title, IconData icon, int index) {
     final isSelected = selectedIndex == index;
 
@@ -126,8 +123,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     );
   }
 
-  // ─────────────────────────────
-  // GAMES GRID
+  
   Widget buildBrainGames() {
     return AnimatedBuilder(
       animation: _controller,
@@ -193,8 +189,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     );
   }
 
-  // ─────────────────────────────
-  // ANIMATED CARD
+  
   Widget animatedGameCard({
     required int index,
     required String title,
