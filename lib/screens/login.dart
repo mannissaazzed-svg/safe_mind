@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController    = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // ── Connexion ────────────────────────────────────
+  
   void login() async {
     final email    = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -54,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // ── Sélecteur de langue ──────────────────────────
+  
   void _showLanguagePicker(BuildContext context) {
     final provider = context.read<LocaleProvider>();
 
@@ -249,7 +249,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     children: [
 
-                      // Email
+                      
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -271,7 +271,7 @@ class _LoginPageState extends State<LoginPage> {
 
                       const SizedBox(height: 20),
 
-                      // Mot de passe
+                     
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
